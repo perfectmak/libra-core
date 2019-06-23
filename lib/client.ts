@@ -3,8 +3,9 @@ import { AdmissionControlClient } from './__generated__/admission_control_grpc_p
 import { UpdateToLatestLedgerRequest, ResponseItem, GetAccountStateResponse, RequestItem, GetAccountStateRequest } from './__generated__/get_with_proof_pb';
 import { AccountStateWithProof, AccountStateBlob } from './__generated__/account_state_blob_pb';
 import { CursorBuffer } from './common/CursorBuffer';
-import { AccountResource, AccountResources } from './wallet/accounts';
+import { AccountState, AccountStates, AccountAddress } from './wallet/Accounts';
 import PathValues from './constants/PathValues';
+import Wallet from './wallet';
 
 export enum Network {
   Testnet = 'testnet',
@@ -16,14 +17,15 @@ interface LibralLibConfig {
   host: string,
   faucetAccountFile?: string,
   faucetServerHost?: string,
-  mnemonicFilePath?: string,
   validatorSetFile?: string,
   network?: Network,
 }
 
 export class LiberaClient {
-  private _config: LibralLibConfig;
-  private _client: AdmissionControlClient;
+  private readonly _config: LibralLibConfig;
+  private readonly _client: AdmissionControlClient;
+
+  static Wallet = Wallet;
 
   constructor(config: LibralLibConfig) {
     this._config = config;
@@ -33,12 +35,28 @@ export class LiberaClient {
   }
 
   /**
-   * Fetches the current state of an account.
+   * Fetch the current state of an account.
+   * 
+   * 
+   * @param {string} address Accounts address
+   */
+  public async getAccountState(address: string): Promise<AccountState> {
+    const result = await this.getAccountStates([address]);
+    return result[0];
+  }
+
+  /**
+   * Fetches the current state of multiple accounts.
    * 
    * @param {string[]} addresses Array of users addresses
    */
-  public async getAccountState(addresses: string[]): Promise<AccountResources> {
-    // TODO: Validate address lengths before making request
+  public async getAccountStates(addresses: string[]): Promise<AccountStates> {
+    for (let address of addresses) {
+      if (!AccountAddress.isValidString(address)) {
+        throw new Error(`[${address}] is not a valid address`);
+      }
+    }
+
     const request = new UpdateToLatestLedgerRequest();
 
     addresses.forEach(address => {
@@ -49,25 +67,29 @@ export class LiberaClient {
       request.addRequestedItems(requestItem);
     })
 
-    return new Promise<AccountResources>((resolve, reject) => {
+    return new Promise<AccountStates>((resolve, reject) => {
       this._client.updateToLatestLedger(request, (error, response) => {
         if (error) {
           return reject(error);
         }
 
-        resolve(response.getResponseItemsList().map((item: ResponseItem) => {
+        resolve(response.getResponseItemsList().map((item: ResponseItem, index: number) => {
           const stateResponse = item.getGetAccountStateResponse() as GetAccountStateResponse;
           const stateWithProof = stateResponse.getAccountStateWithProof() as AccountStateWithProof;
-          const stateBlob = stateWithProof.getBlob() as AccountStateBlob;
-          const blob = stateBlob.getBlob_asU8();
-          const accountState = this._decodeAccountStateBlob(blob);
-          return accountState;
+          if (stateWithProof.hasBlob()) {
+            const stateBlob = stateWithProof.getBlob() as AccountStateBlob;
+            const blob = stateBlob.getBlob_asU8();
+            const accountState = this._decodeAccountStateBlob(blob);
+            return accountState;
+          }
+
+          return AccountState.default(addresses[index]);
         }))
       })
     });
   }
 
-  private _decodeAccountStateBlob(blob: Uint8Array): AccountResource {
+  private _decodeAccountStateBlob(blob: Uint8Array): AccountState {
     const cursor = new CursorBuffer(blob);
     const blobLen = cursor.read32();
 
@@ -89,7 +111,7 @@ export class LiberaClient {
       state[Buffer.from(keyBuffer).toString('hex')] = valueBuffer;
     }
 
-    return AccountResource.from(state[PathValues.AccountStatePath]);
+    return AccountState.from(state[PathValues.AccountStatePath]);
   }
 
 }

@@ -16,11 +16,15 @@
   "license": "Apache",
   "dependencies": {
     "bignumber.js": "^9.0.0",
+    "elliptic": "^6.4.1",
+    "futoin-hkdf": "^1.0.3",
     "google-protobuf": "^3.8.0",
     "grpc": "^1.21.1",
-    "librajs": "^16.0.2"
+    "librajs": "^16.0.2",
+    "sha3": "^2.0.4"
   },
   "devDependencies": {
+    "@types/elliptic": "^6.4.9",
     "@types/google-protobuf": "^3.2.7",
     "@types/jest": "^24.0.15",
     "@types/node": "^12.0.8",
