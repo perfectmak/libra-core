@@ -5,7 +5,6 @@ import { AccountStateWithProof, AccountStateBlob } from './__generated__/account
 import { CursorBuffer } from './common/CursorBuffer';
 import { AccountState, AccountStates, AccountAddress } from './wallet/Accounts';
 import PathValues from './constants/PathValues';
-import Wallet from './wallet';
 
 export enum Network {
   Testnet = 'testnet',
@@ -24,8 +23,6 @@ interface LibralLibConfig {
 export class LiberaClient {
   private readonly _config: LibralLibConfig;
   private readonly _client: AdmissionControlClient;
-
-  static Wallet = Wallet;
 
   constructor(config: LibralLibConfig) {
     this._config = config;

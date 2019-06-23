@@ -6,7 +6,7 @@ interface WalletConfig {
   salt?: string
 }
 
-export class Wallet {
+export class LiberaWallet {
   private readonly _config: WalletConfig;
   private _keyFactory: KeyFactory;
   private _lastChild = 1;
@@ -32,14 +32,14 @@ export class Wallet {
       throw new Error(`depth [${depth}] must be a number`)
     }
     const account = new Account(this._keyFactory.generateKey(depth));
-    this._addAccount(account);
+    this.addAccount(account);
 
     return account;
   }
 
-  private _addAccount(account: Account) {
+  addAccount(account: Account) {
     this.accounts[account.getAddress().toHex()] = account;
   }
 }
 
-export default Wallet;
+export default LiberaWallet;

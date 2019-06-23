@@ -71,6 +71,10 @@ export class Account {
   private _address?: AccountAddress;
   public readonly keyPair: KeyPair;
 
+  static fromSecretKey(secretKey: Uint8Array): Account {
+    return new Account(KeyPair.fromSecretKey(secretKey));
+  }
+
   constructor(keyPair: KeyPair) {
     this.keyPair = keyPair;
   }
@@ -87,6 +91,10 @@ export class Account {
   }
 }
 
+/**
+ * Represents a validated Account address
+ * 
+ */
 export class AccountAddress {
   private readonly _addressBytes: Uint8Array;
 
