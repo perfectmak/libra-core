@@ -18,7 +18,7 @@ export class KeyPair {
   sign(message: Uint8Array): Signature {
     const signatureBuffer = this._eddsaPair.sign(Buffer.from(message))
       .toBytes();
-    return new Uint8Array(signatureBuffer.buffer);
+    return new Uint8Array(signatureBuffer);
   }
 
   verify(message: Uint8Array, signature: Signature): boolean {
@@ -29,10 +29,10 @@ export class KeyPair {
   }
 
   getSecretKey(): Uint8Array {
-    return new Uint8Array(this._eddsaPair.getSecret().buffer);
+    return new Uint8Array(this._eddsaPair.getSecret());
   }
 
   getPublicKey(): Uint8Array {
-    return new Uint8Array(this._eddsaPair.getPublic().buffer);
+    return new Uint8Array(this._eddsaPair.getPublic());
   }
 }

@@ -107,6 +107,10 @@ export class AccountAddress {
     return addressBytes.length === Addresses.AddressLength;
   }
 
+  static default(): AccountAddress {
+    return new AccountAddress(new Uint8Array(Addresses.AddressLength));
+  }
+
   constructor(hash: Uint8Array) {
     if (!AccountAddress.isValidBytes(hash)) {
       throw new Error(`The address is of invalid length [${hash.length}]`)
@@ -116,5 +120,12 @@ export class AccountAddress {
 
   toHex(): string {
     return Buffer.from(this._addressBytes).toString('hex');
+  }
+
+  /**
+   * Alias for toHex()
+   */
+  toString(): string {
+    return this.toHex();
   }
 }

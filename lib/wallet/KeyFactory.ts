@@ -51,6 +51,7 @@ export class KeyFactory {
   public generateKey(childDepth: number): KeyPair {
     const info = `${KeyPrefixes.DerivedKey}${childDepth}`;
     const secretKey = this._hkdf.expand(this._masterPrk, info, 32);
+    // console.log('Secret Key is', secretKey.length, secretKey);
 
     return KeyPair.fromSecretKey(secretKey)
   }

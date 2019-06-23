@@ -13,8 +13,9 @@
     "facebook"
   ],
   "author": "Perfect Makanju",
-  "license": "Apache",
+  "license": "MIT",
   "dependencies": {
+    "axios": "^0.19.0",
     "bignumber.js": "^9.0.0",
     "elliptic": "^6.4.1",
     "futoin-hkdf": "^1.0.3",
@@ -24,6 +25,7 @@
     "sha3": "^2.0.4"
   },
   "devDependencies": {
+    "@types/axios": "^0.14.0",
     "@types/elliptic": "^6.4.9",
     "@types/google-protobuf": "^3.2.7",
     "@types/jest": "^24.0.15",

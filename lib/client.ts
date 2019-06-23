@@ -1,4 +1,6 @@
 import { credentials } from 'grpc'
+import BigNumber from 'bignumber.js';
+import axios from 'axios';
 import { AdmissionControlClient } from './__generated__/admission_control_grpc_pb'
 import { UpdateToLatestLedgerRequest, ResponseItem, GetAccountStateResponse, RequestItem, GetAccountStateRequest } from './__generated__/get_with_proof_pb';
 import { AccountStateWithProof, AccountStateBlob } from './__generated__/account_state_blob_pb';
@@ -6,18 +8,14 @@ import { CursorBuffer } from './common/CursorBuffer';
 import { AccountState, AccountStates, AccountAddress } from './wallet/Accounts';
 import PathValues from './constants/PathValues';
 
-export enum Network {
-  Testnet = 'testnet',
-  Mainnet = 'mainnet'
-}
+const DefaultFaucetServerHost = 'faucet.testnet.libra.org';
+const DefaultTestnetServerHost = 'ac.testnet.libra.org';
 
 interface LibralLibConfig {
   port: string,
   host: string,
-  faucetAccountFile?: string,
   faucetServerHost?: string,
   validatorSetFile?: string,
-  network?: Network,
 }
 
 export class LiberaClient {
@@ -84,6 +82,73 @@ export class LiberaClient {
         }))
       })
     });
+  }
+
+  /**
+   * Uses the faucetService on testnet to mint coins to be sent
+   * to receiver.
+   * 
+   * Returns the sequence number for the transaction used to mint
+   * 
+   * Note: `numCoins` should be in base unit i.e microlibra (10^6 I believe).
+   */
+  public async mintWithFaucetService(
+    receiver: AccountAddress | string,
+    numCoins: BigNumber | string | number,
+    waitForConfirmation: boolean = true,
+  ): Promise<string> {
+    const serverHost = this._config.faucetServerHost || DefaultFaucetServerHost;
+    const coins = new BigNumber(numCoins).toString(10);
+    const address = receiver.toString();
+    const response = await axios.get(`http://${serverHost}?amount=${coins}&address=${address}`);
+
+    if (response.status !== 200) {
+      throw new Error(`Failed to query faucet service. Code: ${response.status}, Err: ${response.data.toString()}`)
+    }
+    const sequenceNumber = response.data as string
+    console.log('gotten response sequence', sequenceNumber);
+
+    if (waitForConfirmation) {
+      await this.waitForConfirmation(AccountAddress.default(), sequenceNumber);
+    }
+
+    return sequenceNumber;
+  }
+
+  /**
+   * Keeps polling the account state of address till sequenceNumber is computed.
+   * 
+   */
+  public async waitForConfirmation(_address: AccountAddress | string, _sequenceNumber: BigNumber | string | number): Promise<void> {
+    const sequenceNumber = new BigNumber(_sequenceNumber);
+    const address = _address.toString();
+    let maxIterations = 20;
+
+    const poll = (
+      resolve: (value?: void | PromiseLike<void>) => void,
+      reject: (reason?: Error) => void
+    ) => {
+      setTimeout(() => {
+        maxIterations--;
+        this.getAccountState(address)
+          .then(accountState => {
+            if (accountState.sequenceNumber.eq(sequenceNumber)) {
+              return resolve();
+            }
+
+            if (maxIterations == -1) {
+              reject(new Error(`Confirmation timeout for [${address}]:[${sequenceNumber.toString(10)}]`))
+            } else {
+              poll(resolve, reject);
+            }
+          })
+          .catch(reject)
+      }, 500);
+    };
+
+    return new Promise((resolve, reject) => {
+      poll(resolve, reject)
+    })
   }
 
   private _decodeAccountStateBlob(blob: Uint8Array): AccountState {
