@@ -51,10 +51,10 @@ console.log(account.getAddress().toHex());
 To mint you need to create a `LibraClient` and use it to mint
 
 ```javascript
-import { LibraClient, LiberaNetwork } from 'libra-core';
+import { LibraClient, LibraNetwork } from 'libra-core';
 
 async function main() {
-  const client = new LibraClient({ network: LiberaNetwork.Testnet });
+  const client = new LibraClient({ network: LibraNetwork.Testnet });
 
   const account = wallet.newAccount();
 
