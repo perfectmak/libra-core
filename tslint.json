@@ -1,0 +1,7 @@
+{
+  "extends": ["tslint:recommended", "tslint-config-prettier"],
+  "rules": {
+    "interface-name" : [true, "never-prefix"],
+    "max-classes-per-file": [false]
+  }
+}

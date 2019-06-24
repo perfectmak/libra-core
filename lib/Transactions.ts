@@ -18,6 +18,10 @@ interface LibraGasConstraint {
 }
 
 export class LibraTransaction {
+
+  public static createTransfer(receipientAddress: string, numAccount: BigNumber): LibraTransaction {
+    throw new Error('Method not implemented. Still working on compiling and encoding programs');
+  }
   public program: LibraProgram;
   public gasContraint: LibraGasConstraint;
   public expirationTime: BigNumber;
@@ -26,28 +30,24 @@ export class LibraTransaction {
 
   /**
    * Create a new Transaction
-   * 
-   * @param program 
-   * @param gasConstraint 
-   * @param expirationTime 
-   * @param sendersAddress 
-   * @param sequenceNumber 
+   *
+   * @param program
+   * @param gasConstraint
+   * @param expirationTime
+   * @param sendersAddress
+   * @param sequenceNumber
    */
   constructor(
     program: LibraProgram,
     gasConstraint: LibraGasConstraint,
     expirationTime: string | BigNumber,
     sendersAddress: Uint8Array,
-    sequenceNumber: string | BigNumber
+    sequenceNumber: string | BigNumber,
   ) {
     this.program = program;
     this.gasContraint = gasConstraint;
     this.expirationTime = new BigNumber(expirationTime);
     this.sendersAddress = new AccountAddress(sendersAddress);
     this.sequenceNumber = new BigNumber(sequenceNumber);
-  }
-
-  static createTransfer(receipientAddress: string, numAccount: BigNumber): LibraTransaction {
-    throw new Error('Method not implemented. Still working on compiling and encoding programs');
   }
 }

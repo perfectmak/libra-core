@@ -1,26 +1,28 @@
+/* tslint:disable */
 const hkdf = require('futoin-hkdf');
+/* tslint:enable */
 
 // Todo: Update implementation to work not only with Node
 export class Hkdf {
-  private _hashAlgorithm: string;
+  private hashAlgorithm: string;
 
   constructor(hashAlgorithm: string) {
-    this._hashAlgorithm = hashAlgorithm;
+    this.hashAlgorithm = hashAlgorithm;
   }
 
-  extract(ikm: Uint8Array, salt: string): Uint8Array {
+  public extract(ikm: Uint8Array, salt: string): Uint8Array {
     const ikmBuffer = Buffer.from(ikm);
-    const prk = hkdf.extract(this._hashAlgorithm, this.hashLength, ikmBuffer, salt);
+    const prk = hkdf.extract(this.hashAlgorithm, this.hashLength, ikmBuffer, salt);
     return new Uint8Array(prk);
   }
 
-  expand(prk: Uint8Array, info: string, outputLen: number): Uint8Array {
+  public expand(prk: Uint8Array, info: string, outputLen: number): Uint8Array {
     const prkBuffer = Buffer.from(prk);
-    const okm = hkdf.expand(this._hashAlgorithm, this.hashLength, prkBuffer, outputLen, info);
+    const okm = hkdf.expand(this.hashAlgorithm, this.hashLength, prkBuffer, outputLen, info);
     return new Uint8Array(okm);
   }
 
   get hashLength(): number {
-    return hkdf.hash_length(this._hashAlgorithm);
+    return hkdf.hash_length(this.hashAlgorithm);
   }
 }

@@ -1,42 +1,63 @@
-import { credentials, ServiceError } from 'grpc'
-import BigNumber from 'bignumber.js';
 import axios from 'axios';
+import BigNumber from 'bignumber.js';
+import { credentials, ServiceError } from 'grpc';
 
-import { AdmissionControlClient } from './__generated__/admission_control_grpc_pb'
-import { UpdateToLatestLedgerRequest, ResponseItem, GetAccountStateResponse, RequestItem, GetAccountStateRequest } from './__generated__/get_with_proof_pb';
-import { AccountStateWithProof, AccountStateBlob } from './__generated__/account_state_blob_pb';
+import { AccountStateBlob, AccountStateWithProof } from './__generated__/account_state_blob_pb';
+import { AdmissionControlClient } from './__generated__/admission_control_grpc_pb';
+import { SubmitTransactionRequest, SubmitTransactionResponse } from './__generated__/admission_control_pb';
+import {
+  GetAccountStateRequest,
+  GetAccountStateResponse,
+  RequestItem,
+  ResponseItem,
+  UpdateToLatestLedgerRequest,
+} from './__generated__/get_with_proof_pb';
+import { Program, RawTransaction, SignedTransaction, TransactionArgument } from './__generated__/transaction_pb';
 import { CursorBuffer } from './common/CursorBuffer';
-import { AccountState, AccountStates, AccountAddress, Account } from './wallet/Accounts';
 import PathValues from './constants/PathValues';
-import { SubmitTransactionResponse, SubmitTransactionRequest } from './__generated__/admission_control_pb';
-import { SignedTransaction, RawTransaction, Program, TransactionArgument } from './__generated__/transaction_pb';
 import { LibraTransaction } from './Transactions';
+import { Account, AccountAddress, AccountState, AccountStates } from './wallet/Accounts';
 
 const DefaultFaucetServerHost = 'faucet.testnet.libra.org';
 const DefaultTestnetServerHost = 'ac.testnet.libra.org';
 
 interface LibralLibConfig {
-  port: string,
-  host: string,
-  faucetServerHost?: string,
-  validatorSetFile?: string,
+  port?: string;
+  host?: string;
+  network?: LibraNetwork;
+  faucetServerHost?: string;
+  validatorSetFile?: string;
+}
+
+export enum LibraNetwork {
+  Testnet = 'testnet',
+  // Mainnet = 'mainnet'
 }
 
 export class LibraClient {
-  private readonly _config: LibralLibConfig;
-  private readonly _client: AdmissionControlClient;
+  private readonly config: LibralLibConfig;
+  private readonly client: AdmissionControlClient;
 
   constructor(config: LibralLibConfig) {
-    this._config = config;
+    this.config = config;
 
-    const connectionAddress = `${config.host}:${config.port}`;
-    this._client = new AdmissionControlClient(connectionAddress, credentials.createInsecure());
+    if (config.host === undefined) {
+      // since only testnet for now
+      this.config.host = DefaultTestnetServerHost;
+    }
+
+    if (config.port === undefined) {
+      this.config.port = '80';
+    }
+
+    const connectionAddress = `${this.config.host}:${this.config.port}`;
+    this.client = new AdmissionControlClient(connectionAddress, credentials.createInsecure());
   }
 
   /**
    * Fetch the current state of an account.
-   * 
-   * 
+   *
+   *
    * @param {string} address Accounts address
    */
   public async getAccountState(address: string): Promise<AccountState> {
@@ -46,11 +67,11 @@ export class LibraClient {
 
   /**
    * Fetches the current state of multiple accounts.
-   * 
+   *
    * @param {string[]} addresses Array of users addresses
    */
   public async getAccountStates(addresses: string[]): Promise<AccountStates> {
-    for (let address of addresses) {
+    for (const address of addresses) {
       if (!AccountAddress.isValidString(address)) {
         throw new Error(`[${address}] is not a valid address`);
       }
@@ -62,38 +83,40 @@ export class LibraClient {
       const requestItem = new RequestItem();
       const getAccountStateRequest = new GetAccountStateRequest();
       getAccountStateRequest.setAddress(Uint8Array.from(Buffer.from(address, 'hex')));
-      requestItem.setGetAccountStateRequest(getAccountStateRequest)
+      requestItem.setGetAccountStateRequest(getAccountStateRequest);
       request.addRequestedItems(requestItem);
-    })
+    });
 
     return new Promise<AccountStates>((resolve, reject) => {
-      this._client.updateToLatestLedger(request, (error, response) => {
+      this.client.updateToLatestLedger(request, (error, response) => {
         if (error) {
           return reject(error);
         }
 
-        resolve(response.getResponseItemsList().map((item: ResponseItem, index: number) => {
-          const stateResponse = item.getGetAccountStateResponse() as GetAccountStateResponse;
-          const stateWithProof = stateResponse.getAccountStateWithProof() as AccountStateWithProof;
-          if (stateWithProof.hasBlob()) {
-            const stateBlob = stateWithProof.getBlob() as AccountStateBlob;
-            const blob = stateBlob.getBlob_asU8();
-            const accountState = this._decodeAccountStateBlob(blob);
-            return accountState;
-          }
+        resolve(
+          response.getResponseItemsList().map((item: ResponseItem, index: number) => {
+            const stateResponse = item.getGetAccountStateResponse() as GetAccountStateResponse;
+            const stateWithProof = stateResponse.getAccountStateWithProof() as AccountStateWithProof;
+            if (stateWithProof.hasBlob()) {
+              const stateBlob = stateWithProof.getBlob() as AccountStateBlob;
+              const blob = stateBlob.getBlob_asU8();
+              const accountState = this._decodeAccountStateBlob(blob);
+              return accountState;
+            }
 
-          return AccountState.default(addresses[index]);
-        }))
-      })
+            return AccountState.default(addresses[index]);
+          }),
+        );
+      });
     });
   }
 
   /**
    * Uses the faucetService on testnet to mint coins to be sent
    * to receiver.
-   * 
+   *
    * Returns the sequence number for the transaction used to mint
-   * 
+   *
    * Note: `numCoins` should be in base unit i.e microlibra (10^6 I believe).
    */
   public async mintWithFaucetService(
@@ -101,15 +124,15 @@ export class LibraClient {
     numCoins: BigNumber | string | number,
     waitForConfirmation: boolean = true,
   ): Promise<string> {
-    const serverHost = this._config.faucetServerHost || DefaultFaucetServerHost;
+    const serverHost = this.config.faucetServerHost || DefaultFaucetServerHost;
     const coins = new BigNumber(numCoins).toString(10);
     const address = receiver.toString();
     const response = await axios.get(`http://${serverHost}?amount=${coins}&address=${address}`);
 
     if (response.status !== 200) {
-      throw new Error(`Failed to query faucet service. Code: ${response.status}, Err: ${response.data.toString()}`)
+      throw new Error(`Failed to query faucet service. Code: ${response.status}, Err: ${response.data.toString()}`);
     }
-    const sequenceNumber = response.data as string
+    const sequenceNumber = response.data as string;
 
     if (waitForConfirmation) {
       await this.waitForConfirmation(AccountAddress.default(), sequenceNumber);
@@ -120,17 +143,17 @@ export class LibraClient {
 
   /**
    * Keeps polling the account state of address till sequenceNumber is computed.
-   * 
+   *
    */
-  public async waitForConfirmation(_address: AccountAddress | string, _sequenceNumber: number | string | BigNumber): Promise<void> {
-    const sequenceNumber = new BigNumber(_sequenceNumber);
-    const address = _address.toString();
+  public async waitForConfirmation(
+    accountAddress: AccountAddress | string,
+    transactionSequenceNumber: number | string | BigNumber,
+  ): Promise<void> {
+    const sequenceNumber = new BigNumber(transactionSequenceNumber);
+    const address = accountAddress.toString();
     let maxIterations = 50;
 
-    const poll = (
-      resolve: (value?: void | PromiseLike<void>) => void,
-      reject: (reason?: Error) => void
-    ) => {
+    const poll = (resolve: (value?: void | PromiseLike<void>) => void, reject: (reason?: Error) => void) => {
       setTimeout(() => {
         maxIterations--;
         this.getAccountState(address)
@@ -139,47 +162,47 @@ export class LibraClient {
               return resolve();
             }
 
-            if (maxIterations == -1) {
-              reject(new Error(`Confirmation timeout for [${address}]:[${sequenceNumber.toString(10)}]`))
+            if (maxIterations === -1) {
+              reject(new Error(`Confirmation timeout for [${address}]:[${sequenceNumber.toString(10)}]`));
             } else {
               poll(resolve, reject);
             }
           })
-          .catch(reject)
+          .catch(reject);
       }, 500);
     };
 
     return new Promise((resolve, reject) => {
-      poll(resolve, reject)
-    })
+      poll(resolve, reject);
+    });
   }
 
   /**
    * Transfer coins from sender to receipient.
    * numCoins should be in libraCoins based unit.
-   * 
-   * @param sender 
-   * @param receipientAddress 
-   * @param numCoins 
+   *
+   * @param sender
+   * @param receipientAddress
+   * @param numCoins
    */
   public async transferCoins(
     sender: Account,
     receipientAddress: string,
-    numCoins: number | string | BigNumber
+    numCoins: number | string | BigNumber,
   ): Promise<SubmitTransactionResponse> {
-    const response = await this.execute(LibraTransaction.createTransfer(
-      receipientAddress,
-      new BigNumber(numCoins)
-    ), sender);
+    const response = await this.execute(
+      LibraTransaction.createTransfer(receipientAddress, new BigNumber(numCoins)),
+      sender,
+    );
 
     return response;
   }
 
   /**
    * Execute a transaction by sender.
-   * 
-   * @param transaction 
-   * @param sender 
+   *
+   * @param transaction
+   * @param sender
    */
   public async execute(transaction: LibraTransaction, sender: Account): Promise<SubmitTransactionResponse> {
     let senderAddress = transaction.sendersAddress;
@@ -189,7 +212,7 @@ export class LibraClient {
     let sequenceNumber = transaction.sequenceNumber;
     if (sequenceNumber.isNegative()) {
       const senderAccountState = await this.getAccountState(senderAddress.toHex());
-      sequenceNumber = senderAccountState.sequenceNumber
+      sequenceNumber = senderAccountState.sequenceNumber;
     }
 
     // Still working on this part
@@ -213,20 +236,15 @@ export class LibraClient {
     signedTransaction.setRawTxnBytes('');
 
     const request = new SubmitTransactionRequest();
-    request.setSignedTxn(signedTransaction)
+    request.setSignedTxn(signedTransaction);
     return new Promise((resolve, reject) => {
-      this._client.submitTransaction(
-        request,
-        (error: ServiceError | null, response: SubmitTransactionResponse) => {
-          if (error) {
-            return reject(error);
-          }
-          resolve(response);
+      this.client.submitTransaction(request, (error: ServiceError | null, response: SubmitTransactionResponse) => {
+        if (error) {
+          return reject(error);
         }
-
-      )
-    })
-    
+        resolve(response);
+      });
+    });
   }
 
   private _decodeAccountStateBlob(blob: Uint8Array): AccountState {
@@ -253,7 +271,6 @@ export class LibraClient {
 
     return AccountState.from(state[PathValues.AccountStatePath]);
   }
-
 }
 
-export default LibraClient
+export default LibraClient;
