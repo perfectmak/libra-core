@@ -1,8 +1,10 @@
 # Libra Core 
 
-Libra Core is a javascript library client that can be used to interact to the libra nodes.
+Libra Core [js] is a javascript library client that can be used to interact with libra nodes.
 
 > This is still under heavy development and testing, so not ready yet
+
+The end goal is to make it usable both in node and on browser clients too, but currently it is mostly compatible with node.
 
 ## Installation
 To install with npm run:
@@ -24,14 +26,20 @@ import { LibraWallet, LibraClient } from 'libra-core';
 In order to create a libra account, you would need to instantiate the `LibraWallet` like:
 
 ```javascript
-import { LibraWallet } from 'libra-core';
+import { LibraWallet, Account as LibraAccount } from 'libra-core';
 
 // please don't use this mnemonic outside of this sample code
 const wallet = new LibraWallet({
         mnemonic: 'upgrade salt toy stable drop paddle'
       });
 
+// generate a new account
 const account = wallet.newAccount();
+
+// or if you have your secret key you can create an account from it
+// const secretKey = 'pub-hex-secret-key-here' 
+// const account = LibraAccount.fromSecretKey(secretKey);
+
 
 // you can see your address by:
 console.log(account.getAddress().toHex());
@@ -51,7 +59,7 @@ async function main() {
   const account = wallet.newAccount();
 
   // mint 2 libracoins to users accounts
-  await client.mintWithFaucetService(account.getAddress(), 20e6)
+  await client.mintWithFaucetService(account.getAddress(), 20e6);
 }
 
 await main();
@@ -68,7 +76,7 @@ async function main() {
   const accountState = await client.getAccountState(accountsAddress);
 
   // log account balance
-  console.log(accountState.balance.toString())
+  console.log(accountState.balance.toString());
 
   // Account state has other information that you could be interested in such as `sequenceNumber`.
 }
@@ -85,5 +93,14 @@ You are welcome to help contribute to making this work.
 You will eventually be able to transfer libra coins from your account to another account using `client.execute()` function, but it is also still a work in progress.
 You are welcome to help contribute to making this work as well.
 
+## Development
+- Clone the repository
+- Run `npm install` to install the dependency
+- Test with `npm test`
+- You might need to run `npm install -g grpc-tools` if you want to regenerate protobuffer classes
+
 ## Contribution
 Feel free to contribute by opening issues or PR's to this repository
+
+## License
+MIT

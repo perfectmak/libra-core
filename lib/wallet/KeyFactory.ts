@@ -10,7 +10,6 @@ import { Mnemonic } from './Mnemonic';
  *
  */
 export class Seed {
-
   public static fromMnemonic(words: string[] | Mnemonic, salt: string = 'LIBRA'): Seed {
     const mnemonic: Mnemonic = Array.isArray(words) ? new Mnemonic(words) : words;
     const mnemonicBytes = mnemonic.toBytes();

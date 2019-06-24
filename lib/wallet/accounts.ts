@@ -13,7 +13,6 @@ export type AccountStates = AccountState[];
  *
  */
 export class AccountState {
-
   /**
    * Returns an empty AccountState
    */
@@ -61,10 +60,15 @@ export class AccountState {
 }
 
 export class Account {
-
-  public static fromSecretKey(secretKey: Uint8Array): Account {
-    return new Account(KeyPair.fromSecretKey(secretKey));
+  public static fromSecretKeyBytes(secretKeyBytes: Uint8Array): Account {
+    return new Account(KeyPair.fromSecretKey(secretKeyBytes));
   }
+
+  public static fromSecretKey(secretKeyHex: string): Account {
+    const keyBytes = new Uint8Array(Buffer.from(secretKeyHex, 'hex'));
+    return Account.fromSecretKeyBytes(keyBytes);
+  }
+
   public readonly keyPair: KeyPair;
   private address?: AccountAddress;
 
@@ -89,7 +93,6 @@ export class Account {
  *
  */
 export class AccountAddress {
-
   public static isValidString(addressHex: string): boolean {
     const length = String(addressHex).replace(' ', '').length;
     return length === Addresses.AddressLength * 2;

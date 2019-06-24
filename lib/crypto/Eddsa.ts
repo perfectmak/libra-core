@@ -3,7 +3,6 @@ import { eddsa as Eddsa } from 'elliptic';
 export type Signature = Uint8Array;
 
 export class KeyPair {
-
   public static fromSecretKey(secretKey: Uint8Array): KeyPair {
     const eddsa = new Eddsa('ed25519');
     const eddsaPair = eddsa.keyFromSecret(Buffer.from(secretKey));

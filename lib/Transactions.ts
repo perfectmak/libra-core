@@ -18,7 +18,6 @@ interface LibraGasConstraint {
 }
 
 export class LibraTransaction {
-
   public static createTransfer(receipientAddress: string, numAccount: BigNumber): LibraTransaction {
     throw new Error('Method not implemented. Still working on compiling and encoding programs');
   }

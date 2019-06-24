@@ -18,7 +18,7 @@ grpc_tools_node_protoc \
   ${FILE_PATHS}
 
 # Generate TypeScript definitions
-grpc_tools_node_protoc \
+protoc \
   --plugin=protoc-gen-ts=./node_modules/.bin/protoc-gen-ts \
   --ts_out=${GEN_OUT_DIR} \
   -I ${PROTO_IMPORT_DIR} \
