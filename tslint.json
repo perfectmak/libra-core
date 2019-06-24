@@ -1,5 +1,10 @@
 {
   "extends": ["tslint:recommended", "tslint-config-prettier"],
+  "linterOptions": {
+    "exclude": [
+        "lib/__generated__/*.js"
+    ]
+  },
   "rules": {
     "interface-name" : [true, "never-prefix"],
     "max-classes-per-file": [false]
