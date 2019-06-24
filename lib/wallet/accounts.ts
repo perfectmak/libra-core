@@ -118,14 +118,22 @@ export class AccountAddress {
     this._addressBytes = hash.slice(0, Addresses.AddressLength);
   }
 
-  toHex(): string {
+  isDefault(): boolean {
+    return AccountAddress.default().toHex() === this.toHex();
+  }
+
+  public toBytes(): Uint8Array {
+    return this._addressBytes;
+  }
+
+  public toHex(): string {
     return Buffer.from(this._addressBytes).toString('hex');
   }
 
   /**
    * Alias for toHex()
    */
-  toString(): string {
+  public toString(): string {
     return this.toHex();
   }
 }

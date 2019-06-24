@@ -1,4 +1,4 @@
 
-export { LiberaClient } from './client';
-export { LiberaWallet } from './wallet';
+export { LibraClient } from './client';
+export { LibraWallet } from './wallet';
 export { Account, AccountState } from './wallet/Accounts';

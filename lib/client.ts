@@ -1,12 +1,16 @@
-import { credentials } from 'grpc'
+import { credentials, ServiceError } from 'grpc'
 import BigNumber from 'bignumber.js';
 import axios from 'axios';
+
 import { AdmissionControlClient } from './__generated__/admission_control_grpc_pb'
 import { UpdateToLatestLedgerRequest, ResponseItem, GetAccountStateResponse, RequestItem, GetAccountStateRequest } from './__generated__/get_with_proof_pb';
 import { AccountStateWithProof, AccountStateBlob } from './__generated__/account_state_blob_pb';
 import { CursorBuffer } from './common/CursorBuffer';
-import { AccountState, AccountStates, AccountAddress } from './wallet/Accounts';
+import { AccountState, AccountStates, AccountAddress, Account } from './wallet/Accounts';
 import PathValues from './constants/PathValues';
+import { SubmitTransactionResponse, SubmitTransactionRequest } from './__generated__/admission_control_pb';
+import { SignedTransaction, RawTransaction, Program, TransactionArgument } from './__generated__/transaction_pb';
+import { LibraTransaction } from './Transactions';
 
 const DefaultFaucetServerHost = 'faucet.testnet.libra.org';
 const DefaultTestnetServerHost = 'ac.testnet.libra.org';
@@ -18,7 +22,7 @@ interface LibralLibConfig {
   validatorSetFile?: string,
 }
 
-export class LiberaClient {
+export class LibraClient {
   private readonly _config: LibralLibConfig;
   private readonly _client: AdmissionControlClient;
 
@@ -106,7 +110,6 @@ export class LiberaClient {
       throw new Error(`Failed to query faucet service. Code: ${response.status}, Err: ${response.data.toString()}`)
     }
     const sequenceNumber = response.data as string
-    console.log('gotten response sequence', sequenceNumber);
 
     if (waitForConfirmation) {
       await this.waitForConfirmation(AccountAddress.default(), sequenceNumber);
@@ -119,10 +122,10 @@ export class LiberaClient {
    * Keeps polling the account state of address till sequenceNumber is computed.
    * 
    */
-  public async waitForConfirmation(_address: AccountAddress | string, _sequenceNumber: BigNumber | string | number): Promise<void> {
+  public async waitForConfirmation(_address: AccountAddress | string, _sequenceNumber: number | string | BigNumber): Promise<void> {
     const sequenceNumber = new BigNumber(_sequenceNumber);
     const address = _address.toString();
-    let maxIterations = 20;
+    let maxIterations = 50;
 
     const poll = (
       resolve: (value?: void | PromiseLike<void>) => void,
@@ -132,7 +135,7 @@ export class LiberaClient {
         maxIterations--;
         this.getAccountState(address)
           .then(accountState => {
-            if (accountState.sequenceNumber.eq(sequenceNumber)) {
+            if (accountState.sequenceNumber.gte(sequenceNumber)) {
               return resolve();
             }
 
@@ -149,6 +152,81 @@ export class LiberaClient {
     return new Promise((resolve, reject) => {
       poll(resolve, reject)
     })
+  }
+
+  /**
+   * Transfer coins from sender to receipient.
+   * numCoins should be in libraCoins based unit.
+   * 
+   * @param sender 
+   * @param receipientAddress 
+   * @param numCoins 
+   */
+  public async transferCoins(
+    sender: Account,
+    receipientAddress: string,
+    numCoins: number | string | BigNumber
+  ): Promise<SubmitTransactionResponse> {
+    const response = await this.execute(LibraTransaction.createTransfer(
+      receipientAddress,
+      new BigNumber(numCoins)
+    ), sender);
+
+    return response;
+  }
+
+  /**
+   * Execute a transaction by sender.
+   * 
+   * @param transaction 
+   * @param sender 
+   */
+  public async execute(transaction: LibraTransaction, sender: Account): Promise<SubmitTransactionResponse> {
+    let senderAddress = transaction.sendersAddress;
+    if (senderAddress.isDefault()) {
+      senderAddress = sender.getAddress();
+    }
+    let sequenceNumber = transaction.sequenceNumber;
+    if (sequenceNumber.isNegative()) {
+      const senderAccountState = await this.getAccountState(senderAddress.toHex());
+      sequenceNumber = senderAccountState.sequenceNumber
+    }
+
+    // Still working on this part
+    const program = new Program();
+    program.setCode(transaction.program.code);
+    // program.setArgumentsList([new TransactionArgument()]);
+    // program.setModulesList([])
+
+    // TODO: Change grpc library. Some of this values should not be numbers
+    const rawTransaction = new RawTransaction();
+    rawTransaction.setSenderAccount(senderAddress.toBytes());
+    rawTransaction.setSequenceNumber(sequenceNumber.toNumber());
+    rawTransaction.setProgram(program);
+    rawTransaction.setMaxGasAmount(transaction.gasContraint.maxGasAmount.toNumber());
+    rawTransaction.setGasUnitPrice(transaction.gasContraint.gasUnitPrice.toNumber());
+    rawTransaction.setExpirationTime(transaction.expirationTime.toNumber());
+
+    const signedTransaction = new SignedTransaction();
+    signedTransaction.setSenderPublicKey(sender.keyPair.getPublicKey());
+    signedTransaction.setSenderSignature('');
+    signedTransaction.setRawTxnBytes('');
+
+    const request = new SubmitTransactionRequest();
+    request.setSignedTxn(signedTransaction)
+    return new Promise((resolve, reject) => {
+      this._client.submitTransaction(
+        request,
+        (error: ServiceError | null, response: SubmitTransactionResponse) => {
+          if (error) {
+            return reject(error);
+          }
+          resolve(response);
+        }
+
+      )
+    })
+    
   }
 
   private _decodeAccountStateBlob(blob: Uint8Array): AccountState {
@@ -178,4 +256,4 @@ export class LiberaClient {
 
 }
 
-export default LiberaClient
+export default LibraClient

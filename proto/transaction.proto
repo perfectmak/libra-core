@@ -28,7 +28,7 @@ message RawTransaction {
     // Maximal total gas specified by wallet to spend for this transaction.
     uint64 max_gas_amount = 5;
     // The price to be paid for each unit of gas.
-    uint64 gas_unit_price = 6;
+    uint64 gas_unit_price = 6;  
     // Expiration time for this transaction.  If storage is queried and
     // the time returned is greater than or equal to this time and this
     // transaction has not been included, you can be certain that it will

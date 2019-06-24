@@ -6,7 +6,7 @@ interface WalletConfig {
   salt?: string
 }
 
-export class LiberaWallet {
+export class LibraWallet {
   private readonly _config: WalletConfig;
   private _keyFactory: KeyFactory;
   private _lastChild = 1;
@@ -42,4 +42,4 @@ export class LiberaWallet {
   }
 }
 
-export default LiberaWallet;
+export default LibraWallet;
