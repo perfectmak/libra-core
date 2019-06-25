@@ -40,6 +40,10 @@ export class LibraWallet {
   public addAccount(account: Account) {
     this.accounts[account.getAddress().toHex()] = account;
   }
+
+  public getConfig() {
+    return this.config;
+  }
 }
 
 export default LibraWallet;
