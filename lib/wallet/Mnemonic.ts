@@ -1,3 +1,4 @@
+import { generateMnemonic } from 'bip39';
 import CollectionUtil from '../common/CollectionUtil';
 import MnemonicWords from '../constants/MnemonicWords';
 
@@ -7,7 +8,13 @@ import MnemonicWords from '../constants/MnemonicWords';
  */
 export class Mnemonic {
   private words: string[];
-  constructor(words: string[]) {
+  constructor(words?: string[]) {
+    if (!words) {
+      const mnemonic = generateMnemonic(256);
+      this.words = mnemonic.split(' ');
+      return;
+    }
+
     if (words.length < 6 || words.length % 6 !== 0) {
       throw new Error('Mnemonic must have a word count divisible with 6');
     }

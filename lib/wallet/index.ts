@@ -1,6 +1,6 @@
-import { generateMnemonic } from 'bip39';
 import { Account } from './accounts';
 import { KeyFactory, Seed } from './KeyFactory';
+import { Mnemonic } from './Mnemonic';
 
 interface WalletConfig {
   mnemonic?: string;
@@ -15,7 +15,7 @@ export class LibraWallet {
 
   constructor(config?: WalletConfig) {
     this.config = config || {};
-    const mnemonic = (this.config.mnemonic) ? this.config.mnemonic : generateMnemonic(256);
+    const mnemonic = (this.config.mnemonic === undefined) ? new Mnemonic().toString() : this.config.mnemonic;
     this.config.mnemonic = mnemonic;
     const seed = Seed.fromMnemonic(mnemonic.split(' '), this.config.salt);
     this.keyFactory = new KeyFactory(seed);
