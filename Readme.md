@@ -26,6 +26,7 @@ import { LibraWallet, LibraClient } from 'libra-core';
 In order to create a libra account, you would need to instantiate the `LibraWallet` like:
 
 ```javascript
+// you may need to use require for node
 import { LibraWallet, Account as LibraAccount } from 'libra-core';
 
 // please don't use this mnemonic outside of this sample code
@@ -70,7 +71,7 @@ await main();
 
 ```javascript
 async function main() {
-  const client = new LibraClient({ network: LiberaNetwork.Testnet });
+  const client = new LibraClient({ network: LibraNetwork.Testnet });
 
   const accountAddress = '854563c50d20788fb6c11fac1010b553d722edb0c02f87c2edbdd3923726d13f';
   const accountState = await client.getAccountState(accountsAddress);
