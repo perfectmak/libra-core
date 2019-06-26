@@ -32,6 +32,7 @@
   "dependencies": {
     "axios": "^0.19.0",
     "bignumber.js": "^9.0.0",
+    "bip39": "^3.0.2",
     "elliptic": "^6.4.1",
     "futoin-hkdf": "^1.0.3",
     "google-protobuf": "^3.8.0",

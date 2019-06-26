@@ -1,8 +1,9 @@
 import { Account } from './accounts';
 import { KeyFactory, Seed } from './KeyFactory';
+import { Mnemonic } from './Mnemonic';
 
 interface WalletConfig {
-  mnemonic: string;
+  mnemonic?: string;
   salt?: string;
 }
 
@@ -12,9 +13,11 @@ export class LibraWallet {
   private lastChild = 1;
   private accounts: { [address: string]: Account } = {};
 
-  constructor(config: WalletConfig) {
-    this.config = config;
-    const seed = Seed.fromMnemonic(config.mnemonic.split(' '), config.salt);
+  constructor(config?: WalletConfig) {
+    this.config = config || {};
+    const mnemonic = (this.config.mnemonic === undefined) ? new Mnemonic().toString() : this.config.mnemonic;
+    this.config.mnemonic = mnemonic;
+    const seed = Seed.fromMnemonic(mnemonic.split(' '), this.config.salt);
     this.keyFactory = new KeyFactory(seed);
   }
 
@@ -36,6 +39,10 @@ export class LibraWallet {
 
   public addAccount(account: Account) {
     this.accounts[account.getAddress().toHex()] = account;
+  }
+
+  public getConfig() {
+    return this.config;
   }
 }
 
