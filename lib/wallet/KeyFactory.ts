@@ -1,5 +1,5 @@
 import KeyPrefixes from '../constants/KeyPrefixes';
-import { KeyPair } from '../crypto/EdDsa';
+import { KeyPair } from '../crypto/Eddsa';
 import { Hkdf } from '../crypto/Hkdf';
 import { Pbkdf } from '../crypto/Pbkdf';
 import { Mnemonic } from './Mnemonic';

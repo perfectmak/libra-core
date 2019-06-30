@@ -2,7 +2,7 @@ import BigNumber from 'bignumber.js';
 import { SHA3 } from 'sha3';
 import { CursorBuffer } from '../common/CursorBuffer';
 import Addresses from '../constants/Addresses';
-import { KeyPair } from '../crypto/EdDsa';
+import { KeyPair } from '../crypto/Eddsa';
 
 export type AccountStates = AccountState[];
 

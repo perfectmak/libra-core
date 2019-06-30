@@ -1,4 +1,4 @@
-import { Account } from './accounts';
+import { Account } from './Accounts';
 import { KeyFactory, Seed } from './KeyFactory';
 import { Mnemonic } from './Mnemonic';
 
