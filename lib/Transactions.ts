@@ -1,5 +1,5 @@
 import BigNumber from 'bignumber.js';
-import { AccountAddress } from './wallet/accounts';
+import { AccountAddress } from './wallet/Accounts';
 
 interface LibraProgram {
   code: Uint8Array;

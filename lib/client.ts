@@ -16,7 +16,7 @@ import { Program, RawTransaction, SignedTransaction, TransactionArgument } from 
 import { CursorBuffer } from './common/CursorBuffer';
 import PathValues from './constants/PathValues';
 import { LibraTransaction } from './Transactions';
-import { Account, AccountAddress, AccountState, AccountStates } from './wallet/accounts';
+import { Account, AccountAddress, AccountState, AccountStates } from './wallet/Accounts';
 
 const DefaultFaucetServerHost = 'faucet.testnet.libra.org';
 const DefaultTestnetServerHost = 'ac.testnet.libra.org';
