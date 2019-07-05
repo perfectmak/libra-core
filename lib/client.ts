@@ -1,10 +1,11 @@
 import axios from 'axios';
 import BigNumber from 'bignumber.js';
-import { credentials, ServiceError } from 'grpc';
+import {credentials, ServiceError} from 'grpc';
 
-import { AccountStateBlob, AccountStateWithProof } from './__generated__/account_state_blob_pb';
-import { AdmissionControlClient } from './__generated__/admission_control_grpc_pb';
-import { SubmitTransactionRequest, SubmitTransactionResponse } from './__generated__/admission_control_pb';
+import SHA3 from "sha3";
+import {AccountStateBlob, AccountStateWithProof} from './__generated__/account_state_blob_pb';
+import {AdmissionControlClient} from './__generated__/admission_control_grpc_pb';
+import {SubmitTransactionRequest, SubmitTransactionResponse} from './__generated__/admission_control_pb';
 import {
   GetAccountStateRequest,
   GetAccountStateResponse,
@@ -12,11 +13,12 @@ import {
   ResponseItem,
   UpdateToLatestLedgerRequest,
 } from './__generated__/get_with_proof_pb';
-import { Program, RawTransaction, SignedTransaction, TransactionArgument } from './__generated__/transaction_pb';
-import { CursorBuffer } from './common/CursorBuffer';
+import {Program, RawTransaction, SignedTransaction, TransactionArgument} from './__generated__/transaction_pb';
+import {CursorBuffer} from './common/CursorBuffer';
+import HashSaltValues from './constants/HashSaltValues';
 import PathValues from './constants/PathValues';
-import { LibraTransaction } from './Transactions';
-import { Account, AccountAddress, AccountState, AccountStates } from './wallet/Accounts';
+import {LibraTransaction} from './Transactions';
+import {Account, AccountAddress, AccountState, AccountStates} from './wallet/Accounts';
 
 const DefaultFaucetServerHost = 'faucet.testnet.libra.org';
 const DefaultTestnetServerHost = 'ac.testnet.libra.org';
@@ -100,8 +102,7 @@ export class LibraClient {
             if (stateWithProof.hasBlob()) {
               const stateBlob = stateWithProof.getBlob() as AccountStateBlob;
               const blob = stateBlob.getBlob_asU8();
-              const accountState = this._decodeAccountStateBlob(blob);
-              return accountState;
+              return this._decodeAccountStateBlob(blob);
             }
 
             return AccountState.default(addresses[index]);
@@ -182,20 +183,18 @@ export class LibraClient {
    * numCoins should be in libraCoins based unit.
    *
    * @param sender
-   * @param receipientAddress
+   * @param recipientAddress
    * @param numCoins
    */
   public async transferCoins(
     sender: Account,
-    receipientAddress: string,
+    recipientAddress: string,
     numCoins: number | string | BigNumber,
   ): Promise<SubmitTransactionResponse> {
-    const response = await this.execute(
-      LibraTransaction.createTransfer(receipientAddress, new BigNumber(numCoins)),
-      sender,
+    return await this.execute(
+        LibraTransaction.createTransfer(recipientAddress, new BigNumber(numCoins)),
+        sender,
     );
-
-    return response;
   }
 
   /**
@@ -207,7 +206,7 @@ export class LibraClient {
   public async execute(transaction: LibraTransaction, sender: Account): Promise<SubmitTransactionResponse> {
     let senderAddress = transaction.sendersAddress;
     if (senderAddress.isDefault()) {
-      senderAddress = sender.getAddress();
+        senderAddress = sender.getAddress();
     }
     let sequenceNumber = transaction.sequenceNumber;
     if (sequenceNumber.isNegative()) {
@@ -218,24 +217,36 @@ export class LibraClient {
     // Still working on this part
     const program = new Program();
     program.setCode(transaction.program.code);
-    // program.setArgumentsList([new TransactionArgument()]);
-    // program.setModulesList([])
-
-    // TODO: Change grpc library. Some of this values should not be numbers
+    const transactionArguments = new Array<TransactionArgument>();
+    transaction.program.arguments.forEach(argument => {
+        const transactionArgument = new TransactionArgument();
+        transactionArgument.setType(argument.type);
+        transactionArgument.setData(argument.value);
+        transactionArguments.push(transactionArgument);
+    });
+    program.setArgumentsList(transactionArguments);
+    program.setModulesList(transaction.program.modules);
     const rawTransaction = new RawTransaction();
-    rawTransaction.setSenderAccount(senderAddress.toBytes());
+    rawTransaction.setExpirationTime(transaction.expirationTime.toNumber());
+    rawTransaction.setGasUnitPrice(transaction.gasContraint.gasUnitPrice.toNumber());
+    rawTransaction.setMaxGasAmount(transaction.gasContraint.maxGasAmount.toNumber());
     rawTransaction.setSequenceNumber(sequenceNumber.toNumber());
     rawTransaction.setProgram(program);
-    rawTransaction.setMaxGasAmount(transaction.gasContraint.maxGasAmount.toNumber());
-    rawTransaction.setGasUnitPrice(transaction.gasContraint.gasUnitPrice.toNumber());
-    rawTransaction.setExpirationTime(transaction.expirationTime.toNumber());
+    rawTransaction.setSenderAccount(senderAddress.toBytes());
 
     const signedTransaction = new SignedTransaction();
-    signedTransaction.setSenderPublicKey(sender.keyPair.getPublicKey());
-    signedTransaction.setSenderSignature('');
-    signedTransaction.setRawTxnBytes('');
 
     const request = new SubmitTransactionRequest();
+    const rawTxnBytes = rawTransaction.serializeBinary();
+    const hash = new SHA3(256)
+        .update(Buffer.from(HashSaltValues.rawTransactionHashSalt, 'hex'))
+        .update(Buffer.from(rawTxnBytes.buffer))
+        .digest();
+    const senderSignature = sender.keyPair.sign(hash);
+    signedTransaction.setRawTxnBytes(rawTxnBytes);
+    signedTransaction.setSenderPublicKey(sender.keyPair.getPublicKey());
+    signedTransaction.setSenderSignature(senderSignature);
+
     request.setSignedTxn(signedTransaction);
     return new Promise((resolve, reject) => {
       this.client.submitTransaction(request, (error: ServiceError | null, response: SubmitTransactionResponse) => {
