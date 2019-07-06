@@ -10,7 +10,7 @@ interface WalletConfig {
 export class LibraWallet {
   private readonly config: WalletConfig;
   private keyFactory: KeyFactory;
-  private lastChild = 1;
+  private lastChild = 0;
   private accounts: { [address: string]: Account } = {};
 
   constructor(config?: WalletConfig) {

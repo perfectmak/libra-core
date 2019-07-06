@@ -1,4 +1,7 @@
 import BigNumber from 'bignumber.js';
+import {TransactionArgument} from "./__generated__/transaction_pb";
+import Addresses from "./constants/Addresses";
+import ProgamBase64Codes from "./constants/ProgamBase64Codes";
 import { AccountAddress } from './wallet/Accounts';
 
 interface LibraProgram {
@@ -8,7 +11,7 @@ interface LibraProgram {
 }
 
 interface LibraProgramArgument {
-  type: string;
+  type: TransactionArgument.ArgType;
   value: Uint8Array;
 }
 
@@ -18,8 +21,30 @@ interface LibraGasConstraint {
 }
 
 export class LibraTransaction {
-  public static createTransfer(receipientAddress: string, numAccount: BigNumber): LibraTransaction {
-    throw new Error('Method not implemented. Still working on compiling and encoding programs');
+  public static createTransfer(recipientAddress: string, numAccount: BigNumber): LibraTransaction {
+    const amountBuffer = Buffer.alloc(8);
+    amountBuffer.writeBigUInt64LE(BigInt(numAccount),0);
+    const programArguments: LibraProgramArgument[] = [
+      {
+        type: TransactionArgument.ArgType.ADDRESS,
+        value: Uint8Array.from(Buffer.from(recipientAddress, 'hex'))
+      },{
+        type: TransactionArgument.ArgType.U64,
+        value: Uint8Array.from(amountBuffer)
+      }
+    ];
+    const program: LibraProgram = {
+      arguments: programArguments,
+      code: Uint8Array.from(Buffer.from(ProgamBase64Codes.peerToPeerTxn, 'base64')),
+      modules: []
+    };
+    return new LibraTransaction(program, {
+          gasUnitPrice: new BigNumber(0),
+          maxGasAmount: new BigNumber(1000000)
+        },
+        `${Math.floor(new Date().getTime()/1000) + 100}`,
+        new Uint8Array(Addresses.AddressLength),
+        '-0');
   }
   public program: LibraProgram;
   public gasContraint: LibraGasConstraint;
