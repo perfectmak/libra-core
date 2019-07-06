@@ -87,8 +87,21 @@ await main();
 
 ### Transferring Libra Coins
 
-You will eventually be able to transfer libra coins from your account to another account using `client.transferCoins()` function, but it is still a work in progress.
-You are welcome to help contribute to making this work.
+```javascript
+async function main() {
+  const client = new LibraClient({ network: LibraNetwork.Testnet });
+  const wallet = new LibraWallet({
+    mnemonic:
+     'lend arm arm addict trust release grid unlock exhibit surround deliver front link bean night dry tuna pledge expect net ankle process mammal great',
+
+  });
+  const account = wallet.newAccount();
+  const account2Address = '854563c50d20788fb6c11fac1010b553d722edb0c02f87c2edbdd3923726d13f';
+  await client.transferCoins(account, account2Address, 1e6);
+}
+
+await main();
+```
 
 ### Executing Transactions with Custom Program
 You will eventually be able to transfer libra coins from your account to another account using `client.execute()` function, but it is also still a work in progress.
