@@ -2,18 +2,29 @@ import axios from 'axios';
 import BigNumber from 'bignumber.js';
 import { credentials, ServiceError } from 'grpc';
 
+import { parse } from 'path';
 import SHA3 from 'sha3';
+import { AccessPath } from './__generated__/access_path_pb';
 import { AccountStateBlob, AccountStateWithProof } from './__generated__/account_state_blob_pb';
 import { AdmissionControlClient } from './__generated__/admission_control_grpc_pb';
 import { SubmitTransactionRequest, SubmitTransactionResponse } from './__generated__/admission_control_pb';
+import { EventsList } from './__generated__/events_pb';
 import {
   GetAccountStateRequest,
   GetAccountStateResponse,
+  GetAccountTransactionBySequenceNumberRequest,
+  GetAccountTransactionBySequenceNumberResponse,
   RequestItem,
   ResponseItem,
   UpdateToLatestLedgerRequest,
 } from './__generated__/get_with_proof_pb';
-import { Program, RawTransaction, SignedTransaction, TransactionArgument } from './__generated__/transaction_pb';
+import {
+  Program,
+  RawTransaction,
+  SignedTransaction,
+  SignedTransactionWithProof,
+  TransactionArgument,
+} from './__generated__/transaction_pb';
 import {
   BinaryError,
   ExecutionStatus,
@@ -26,6 +37,7 @@ import {
 import { CursorBuffer } from './common/CursorBuffer';
 import HashSaltValues from './constants/HashSaltValues';
 import PathValues from './constants/PathValues';
+import { KeyPair, Signature } from './crypto/Eddsa';
 import {
   LibraDeserializationError,
   LibraExecutionError,
@@ -38,13 +50,22 @@ import {
   LibraVerificationStatusKind,
   LibraVMStatusError,
 } from './transaction/Errors';
-import { LibraTransaction, LibraTransactionResponse } from './Transactions';
-import { Account, AccountAddress, AccountState, AccountStates } from './wallet/Accounts';
+import {
+  LibraGasConstraint,
+  LibraProgram,
+  LibraProgramArgumentType,
+  LibraSignedTransaction,
+  LibraSignedTransactionWithProof,
+  LibraTransaction,
+  LibraTransactionEvent,
+  LibraTransactionResponse,
+} from './Transactions';
+import { Account, AccountAddress, AccountAddressLike, AccountState, AccountStates } from './wallet/Accounts';
 
 const DefaultFaucetServerHost = 'faucet.testnet.libra.org';
 const DefaultTestnetServerHost = 'ac.testnet.libra.org';
 
-interface LibralLibConfig {
+interface LibraLibConfig {
   port?: string;
   host?: string;
   network?: LibraNetwork;
@@ -58,10 +79,10 @@ export enum LibraNetwork {
 }
 
 export class LibraClient {
-  private readonly config: LibralLibConfig;
+  private readonly config: LibraLibConfig;
   private readonly client: AdmissionControlClient;
 
-  constructor(config: LibralLibConfig) {
+  constructor(config: LibraLibConfig) {
     this.config = config;
 
     if (config.host === undefined) {
@@ -83,7 +104,7 @@ export class LibraClient {
    *
    * @param {string} address Accounts address
    */
-  public async getAccountState(address: string): Promise<AccountState> {
+  public async getAccountState(address: AccountAddressLike): Promise<AccountState> {
     const result = await this.getAccountStates([address]);
     return result[0];
   }
@@ -91,21 +112,17 @@ export class LibraClient {
   /**
    * Fetches the current state of multiple accounts.
    *
-   * @param {string[]} addresses Array of users addresses
+   * @param {AccountAddressLike[]} addresses Array of users addresses
    */
-  public async getAccountStates(addresses: string[]): Promise<AccountStates> {
-    for (const address of addresses) {
-      if (!AccountAddress.isValidString(address)) {
-        throw new Error(`[${address}] is not a valid address`);
-      }
-    }
+  public async getAccountStates(addresses: AccountAddressLike[]): Promise<AccountStates> {
+    const accountAddresses = addresses.map(address => new AccountAddress(address));
 
     const request = new UpdateToLatestLedgerRequest();
 
-    addresses.forEach(address => {
+    accountAddresses.forEach(address => {
       const requestItem = new RequestItem();
       const getAccountStateRequest = new GetAccountStateRequest();
-      getAccountStateRequest.setAddress(Uint8Array.from(Buffer.from(address, 'hex')));
+      getAccountStateRequest.setAddress(address.toBytes());
       requestItem.setGetAccountStateRequest(getAccountStateRequest);
       request.addRequestedItems(requestItem);
     });
@@ -126,9 +143,50 @@ export class LibraClient {
               return this.decodeAccountStateBlob(blob);
             }
 
-            return AccountState.default(addresses[index]);
+            return AccountState.default(accountAddresses[index].toHex());
           }),
         );
+      });
+    });
+  }
+
+  /**
+   * Returns the Accounts transaction done with sequenceNumber.
+   *
+   */
+  public async getAccountTransaction(
+    address: AccountAddressLike,
+    sequenceNumber: BigNumber | string | number,
+    fetchEvents: boolean = true,
+  ): Promise<LibraSignedTransactionWithProof | null> {
+    const accountAddress = new AccountAddress(address);
+    const parsedSequenceNumber = new BigNumber(sequenceNumber);
+    const request = new UpdateToLatestLedgerRequest();
+
+    const requestItem = new RequestItem();
+    const getTransactionRequest = new GetAccountTransactionBySequenceNumberRequest();
+    getTransactionRequest.setAccount(accountAddress.toBytes());
+    getTransactionRequest.setSequenceNumber(parsedSequenceNumber.toNumber());
+    getTransactionRequest.setFetchEvents(fetchEvents);
+    requestItem.setGetAccountTransactionBySequenceNumberRequest(getTransactionRequest);
+
+    request.addRequestedItems(requestItem);
+
+    return new Promise<LibraSignedTransactionWithProof | null>((resolve, reject) => {
+      this.client.updateToLatestLedger(request, (error, response) => {
+        if (error) {
+          return reject(error);
+        }
+
+        const responseItems = response.getResponseItemsList();
+
+        if (responseItems.length === 0) {
+          return resolve(null);
+        }
+
+        const r = responseItems[0].getGetAccountTransactionBySequenceNumberResponse() as GetAccountTransactionBySequenceNumberResponse;
+        const signedTransactionWP = r.getSignedTransactionWithProof() as SignedTransactionWithProof;
+        resolve(this.decodeSignedTransactionWithProof(signedTransactionWP));
       });
     });
   }
@@ -200,12 +258,21 @@ export class LibraClient {
   }
 
   /**
+   * Sign the transaction with keyPair and returns a promise that resolves to a LibraSignedTransaction
+   *
+   *
+   */
+  public async signTransaction(transaction: LibraTransaction, keyPair: KeyPair): Promise<LibraSignedTransaction> {
+    const rawTxn = await this.encodeLibraTransaction(transaction, transaction.sendersAddress);
+    const signature = this.signRawTransaction(rawTxn, keyPair);
+
+    return new LibraSignedTransaction(transaction, keyPair.getPublicKey(), signature);
+  }
+
+  /**
    * Transfer coins from sender to receipient.
    * numCoins should be in libraCoins based unit.
    *
-   * @param sender
-   * @param recipientAddress
-   * @param numCoins
    */
   public async transferCoins(
     sender: Account,
@@ -218,50 +285,15 @@ export class LibraClient {
   /**
    * Execute a transaction by sender.
    *
-   * @param transaction
-   * @param sender
    */
   public async execute(transaction: LibraTransaction, sender: Account): Promise<LibraTransactionResponse> {
-    let senderAddress = transaction.sendersAddress;
-    if (senderAddress.isDefault()) {
-      senderAddress = sender.getAddress();
-    }
-    let sequenceNumber = transaction.sequenceNumber;
-    if (sequenceNumber.isNegative()) {
-      const senderAccountState = await this.getAccountState(senderAddress.toHex());
-      sequenceNumber = senderAccountState.sequenceNumber;
-    }
-
-    // Still working on this part
-    const program = new Program();
-    program.setCode(transaction.program.code);
-    const transactionArguments = new Array<TransactionArgument>();
-    transaction.program.arguments.forEach(argument => {
-      const transactionArgument = new TransactionArgument();
-      transactionArgument.setType(argument.type);
-      transactionArgument.setData(argument.value);
-      transactionArguments.push(transactionArgument);
-    });
-    program.setArgumentsList(transactionArguments);
-    program.setModulesList(transaction.program.modules);
-    const rawTransaction = new RawTransaction();
-    rawTransaction.setExpirationTime(transaction.expirationTime.toNumber());
-    rawTransaction.setGasUnitPrice(transaction.gasContraint.gasUnitPrice.toNumber());
-    rawTransaction.setMaxGasAmount(transaction.gasContraint.maxGasAmount.toNumber());
-    rawTransaction.setSequenceNumber(sequenceNumber.toNumber());
-    rawTransaction.setProgram(program);
-    rawTransaction.setSenderAccount(senderAddress.toBytes());
-
+    const rawTransaction = await this.encodeLibraTransaction(transaction, sender.getAddress());
     const signedTransaction = new SignedTransaction();
 
     const request = new SubmitTransactionRequest();
-    const rawTxnBytes = rawTransaction.serializeBinary();
-    const hash = new SHA3(256)
-      .update(Buffer.from(HashSaltValues.rawTransactionHashSalt, 'hex'))
-      .update(Buffer.from(rawTxnBytes.buffer))
-      .digest();
-    const senderSignature = sender.keyPair.sign(hash);
-    signedTransaction.setRawTxnBytes(rawTxnBytes);
+
+    const senderSignature = this.signRawTransaction(rawTransaction, sender.keyPair);
+    signedTransaction.setRawTxnBytes(rawTransaction.serializeBinary());
     signedTransaction.setSenderPublicKey(sender.keyPair.getPublicKey());
     signedTransaction.setSenderSignature(senderSignature);
 
@@ -277,7 +309,7 @@ export class LibraClient {
         const vmStatus = this.decodeVMStatus(response.getVmStatus());
         resolve(
           new LibraTransactionResponse(
-            transaction,
+            new LibraSignedTransaction(transaction, sender.keyPair.getPublicKey(), senderSignature),
             response.getValidatorId_asU8(),
             response.getAcStatus(),
             response.getMempoolStatus(),
@@ -310,7 +342,73 @@ export class LibraClient {
       state[Buffer.from(keyBuffer).toString('hex')] = valueBuffer;
     }
 
-    return AccountState.from(state[PathValues.AccountStatePath]);
+    return AccountState.fromBytes(state[PathValues.AccountStatePath]);
+  }
+
+  private decodeSignedTransactionWithProof(
+    signedTransactionWP: SignedTransactionWithProof,
+  ): LibraSignedTransactionWithProof {
+    // decode transaction
+    const signedTransaction = signedTransactionWP.getSignedTransaction() as SignedTransaction;
+    const libraTransaction = this.decodeRawTransactionBytes(signedTransaction.getRawTxnBytes_asU8());
+
+    const libraSignedtransaction = new LibraSignedTransaction(
+      libraTransaction,
+      signedTransaction.getSenderPublicKey_asU8(),
+      signedTransaction.getSenderSignature_asU8(),
+    );
+
+    // decode event
+    let eventsList: LibraTransactionEvent[] | undefined;
+    if (signedTransactionWP.hasEvents()) {
+      const events = signedTransactionWP.getEvents() as EventsList;
+      eventsList = events.getEventsList().map(event => {
+        let address: AccountAddress | undefined;
+        let path: Uint8Array | undefined;
+
+        if (event.hasAccessPath()) {
+          const accessPath = event.getAccessPath() as AccessPath;
+          address = new AccountAddress(accessPath.getAddress_asU8());
+          path = accessPath.getPath_asU8();
+        }
+
+        return new LibraTransactionEvent(
+          event.getEventData_asU8(),
+          new BigNumber(event.getSequenceNumber()),
+          address,
+          path,
+        );
+      });
+    }
+
+    return new LibraSignedTransactionWithProof(libraSignedtransaction, signedTransactionWP.getProof(), eventsList);
+  }
+
+  private decodeRawTransactionBytes(rawTxnBytes: Uint8Array): LibraTransaction {
+    const rawTxn = RawTransaction.deserializeBinary(rawTxnBytes);
+    const rawProgram = rawTxn.getProgram() as Program;
+
+    const program: LibraProgram = {
+      arguments: rawProgram.getArgumentsList().map(argument => ({
+        type: (argument.getType() as unknown) as LibraProgramArgumentType,
+        value: argument.getData_asU8(),
+      })),
+      code: rawProgram.getCode_asU8(),
+      modules: rawProgram.getModulesList_asU8(),
+    };
+
+    const gasContraint: LibraGasConstraint = {
+      gasUnitPrice: new BigNumber(rawTxn.getGasUnitPrice()),
+      maxGasAmount: new BigNumber(rawTxn.getMaxGasAmount()),
+    };
+
+    return new LibraTransaction(
+      program,
+      gasContraint,
+      new BigNumber(rawTxn.getExpirationTime()),
+      rawTxn.getSenderAccount_asU8(),
+      new BigNumber(rawTxn.getSequenceNumber()),
+    );
   }
 
   private decodeVMStatus(vmStatus?: VMStatus): LibraVMStatusError | undefined {
@@ -369,6 +467,52 @@ export class LibraClient {
       deserializationError,
       executionError,
     );
+  }
+
+  private signRawTransaction(rawTransaction: RawTransaction, keyPair: KeyPair): Signature {
+    const rawTxnBytes = rawTransaction.serializeBinary();
+    const hash = new SHA3(256)
+      .update(Buffer.from(HashSaltValues.rawTransactionHashSalt, 'hex'))
+      .update(Buffer.from(rawTxnBytes.buffer))
+      .digest();
+
+    return keyPair.sign(hash);
+  }
+
+  private async encodeLibraTransaction(
+    transaction: LibraTransaction,
+    senderAccountAddress: AccountAddress,
+  ): Promise<RawTransaction> {
+    let senderAddress = transaction.sendersAddress;
+    if (senderAddress.isDefault()) {
+      senderAddress = senderAccountAddress;
+    }
+    let sequenceNumber = transaction.sequenceNumber;
+    if (sequenceNumber.isNegative()) {
+      const senderAccountState = await this.getAccountState(senderAddress.toHex());
+      sequenceNumber = senderAccountState.sequenceNumber;
+    }
+
+    const program = new Program();
+    program.setCode(transaction.program.code);
+    const transactionArguments = new Array<TransactionArgument>();
+    transaction.program.arguments.forEach(argument => {
+      const transactionArgument = new TransactionArgument();
+      transactionArgument.setType((argument.type as unknown) as TransactionArgument.ArgType);
+      transactionArgument.setData(argument.value);
+      transactionArguments.push(transactionArgument);
+    });
+    program.setArgumentsList(transactionArguments);
+    program.setModulesList(transaction.program.modules);
+    const rawTransaction = new RawTransaction();
+    rawTransaction.setExpirationTime(transaction.expirationTime.toNumber());
+    rawTransaction.setGasUnitPrice(transaction.gasContraint.gasUnitPrice.toNumber());
+    rawTransaction.setMaxGasAmount(transaction.gasContraint.maxGasAmount.toNumber());
+    rawTransaction.setSequenceNumber(sequenceNumber.toNumber());
+    rawTransaction.setProgram(program);
+    rawTransaction.setSenderAccount(senderAddress.toBytes());
+
+    return rawTransaction;
   }
 }
 

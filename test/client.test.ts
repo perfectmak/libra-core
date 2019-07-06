@@ -1,3 +1,4 @@
+import './utils';
 import { LibraClient, LibraNetwork, LibraWallet, LibraAdmissionControlStatus } from '../lib';
 
 describe('LibraClient', () => {
@@ -11,10 +12,12 @@ describe('LibraClient', () => {
     // TEST ACCOUNT CREATION
     const account1 = wallet.newAccount();
     const account1Address = account1.getAddress().toHex();
+    console.log('Account 1 address', account1Address);
     let account1State = await client.getAccountState(account1Address);
 
     const account2 = wallet.newAccount();
     const account2Address = account2.getAddress().toHex();
+    console.log('Account 2 address', account2Address);
     const account2State = await client.getAccountState(account2Address);
 
     const amountToTransfer = 1e6;
@@ -34,5 +37,13 @@ describe('LibraClient', () => {
     await response.awaitConfirmation(client);
     const newAccount2State = await client.getAccountState(account2Address);
     expect(newAccount2State.balance.toString(10)).toEqual(account2State.balance.plus(amountToTransfer).toString(10));
-  }, 30000);
+
+    // TEST QUERYING TRANSACTION
+    const lastTransaction = await client.getAccountTransaction(account1.getAddress(), account1State.sequenceNumber);
+    expect(lastTransaction).not.toBeNull();
+    // // ensure parameters are decoded properly
+    expect(lastTransaction!.signedTransaction.publicKey).bytesToEqual(account1.keyPair.getPublicKey());
+    expect(lastTransaction!.signedTransaction.transaction.sequenceNumber).toEqual(account1State.sequenceNumber);
+    // // TODO test events from transactions queried
+  }, 50000);
 });

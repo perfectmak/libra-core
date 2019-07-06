@@ -26,7 +26,7 @@ export class AccountState {
     );
   }
 
-  public static from(bytes: Uint8Array): AccountState {
+  public static fromBytes(bytes: Uint8Array): AccountState {
     const cursor = new CursorBuffer(bytes);
 
     const authenticationKeyLen = cursor.read32();
@@ -88,6 +88,13 @@ export class Account {
   }
 }
 
+export type AccountAddressLike = AccountAddress | string | Uint8Array;
+export class InvalidAccountAddressError extends Error {
+  constructor(invalidLength: number | string) {
+    super(`The address is of invalid length [${invalidLength}]`);
+  }
+}
+
 /**
  * Represents a validated Account address
  *
@@ -107,11 +114,19 @@ export class AccountAddress {
   }
   private readonly addressBytes: Uint8Array;
 
-  constructor(hash: Uint8Array) {
-    if (!AccountAddress.isValidBytes(hash)) {
-      throw new Error(`The address is of invalid length [${hash.length}]`);
+  constructor(addressOrHash: AccountAddressLike) {
+    if (typeof addressOrHash === 'string') {
+      this.addressBytes = Uint8Array.from(Buffer.from(addressOrHash, 'hex'));
+    } else if (addressOrHash instanceof AccountAddress) {
+      this.addressBytes = addressOrHash.addressBytes;
+    } else {
+      // assume it a byte array
+      this.addressBytes = addressOrHash.slice(0, Addresses.AddressLength);
     }
-    this.addressBytes = hash.slice(0, Addresses.AddressLength);
+
+    if (!AccountAddress.isValidBytes(this.addressBytes)) {
+      throw new InvalidAccountAddressError(this.addressBytes.length);
+    }
   }
 
   public isDefault(): boolean {
