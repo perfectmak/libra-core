@@ -6,6 +6,14 @@ Libra Core [js] is a javascript library client that can be used to interact with
 
 The end goal is to make it usable both in node and on browser clients too, but currently it is mostly compatible with node.
 
+## Prepare
+- Node ^v12.0.0 is reuiqred for sha3-256.
+You can use nvm to download/use node v12 by following.
+```sh
+nvm install 12
+nvm use 12
+```
+
 ## Installation
 To install with npm run:
 
