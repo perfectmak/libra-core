@@ -170,7 +170,7 @@ export class LibraClient {
             }
           })
           .catch(reject);
-      }, 500);
+      }, 1000);
     };
 
     return new Promise((resolve, reject) => {
@@ -191,7 +191,7 @@ export class LibraClient {
     recipientAddress: string,
     numCoins: number | string | BigNumber,
   ): Promise<SubmitTransactionResponse> {
-    return await this.execute(
+    return this.execute(
         LibraTransaction.createTransfer(recipientAddress, new BigNumber(numCoins)),
         sender,
     );

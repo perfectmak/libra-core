@@ -1,7 +1,7 @@
 {
   "name": "libra-core",
   "version": "1.0.0-alpha",
-  "description": "Library for Crypto",
+  "description": "Typescript Library for Libra",
   "main": "build/index.js",
   "types": "build/index.d.ts",
   "files": [

@@ -1,8 +1,8 @@
 # Libra Core 
 
-Libra Core [js] is a javascript library client that can be used to interact with libra nodes.
+Libra Core is a javascript library client that can be used to interact with libra nodes. It is built using typescript.
 
-> This is still under heavy development and testing, so not ready yet
+> This is still under heavy testing, so please report any issues that you might encounter using it.
 
 The end goal is to make it usable both in node and on browser clients too, but currently it is mostly compatible with node.
 
@@ -30,6 +30,7 @@ In order to create a libra account, you would need to instantiate the `LibraWall
 import { LibraWallet, Account as LibraAccount } from 'libra-core';
 
 // please don't use this mnemonic outside of this sample code
+// also mnemonics are optional. If you don't specify one a random mnemonic is generated and used.
 const wallet = new LibraWallet({
         mnemonic: 'upgrade salt toy stable drop paddle'
       });

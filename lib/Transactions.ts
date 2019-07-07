@@ -21,7 +21,10 @@ interface LibraGasConstraint {
 }
 
 export class LibraTransaction {
-  public static createTransfer(recipientAddress: string, numAccount: BigNumber): LibraTransaction {
+  public static createTransfer(
+    recipientAddress: string,
+    numAccount: BigNumber
+  ): LibraTransaction {
     const amountBuffer = Buffer.alloc(8);
     amountBuffer.writeBigUInt64LE(BigInt(numAccount),0);
     const programArguments: LibraProgramArgument[] = [
@@ -44,8 +47,9 @@ export class LibraTransaction {
         },
         `${Math.floor(new Date().getTime()/1000) + 100}`,
         new Uint8Array(Addresses.AddressLength),
-        '-0');
+        '-1');
   }
+
   public program: LibraProgram;
   public gasContraint: LibraGasConstraint;
   public expirationTime: BigNumber;
