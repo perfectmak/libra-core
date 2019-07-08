@@ -13,7 +13,7 @@ message AccumulatorProof {
   // accumulator. The leftmost 1-bit corresponds to the sibling at the level
   // just below root level in the accumulator, since this one is always
   // non-default.
-  uint64 bitmap = 1;
+  uint64 bitmap = 1 [jstype = JS_STRING];
 
   // The non-default siblings. The ones near the root are at the beginning of
   // the list.

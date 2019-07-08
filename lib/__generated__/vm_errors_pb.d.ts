@@ -92,8 +92,8 @@ export namespace VMVerificationStatus {
 }
 
 export class AssertionFailure extends jspb.Message {
-  getAssertionErrorCode(): number;
-  setAssertionErrorCode(value: number): void;
+  getAssertionErrorCode(): string;
+  setAssertionErrorCode(value: string): void;
 
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): AssertionFailure.AsObject;
@@ -107,7 +107,7 @@ export class AssertionFailure extends jspb.Message {
 
 export namespace AssertionFailure {
   export type AsObject = {
-    assertionErrorCode: number;
+    assertionErrorCode: string;
   };
 }
 

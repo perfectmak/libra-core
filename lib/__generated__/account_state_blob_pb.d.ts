@@ -29,8 +29,8 @@ export namespace AccountStateBlob {
 }
 
 export class AccountStateWithProof extends jspb.Message {
-  getVersion(): number;
-  setVersion(value: number): void;
+  getVersion(): string;
+  setVersion(value: string): void;
 
   hasBlob(): boolean;
   clearBlob(): void;
@@ -54,7 +54,7 @@ export class AccountStateWithProof extends jspb.Message {
 
 export namespace AccountStateWithProof {
   export type AsObject = {
-    version: number;
+    version: string;
     blob?: AccountStateBlob.AsObject;
     proof?: proof_pb.AccountStateProof.AsObject;
   };
