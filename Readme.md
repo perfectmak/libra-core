@@ -6,6 +6,8 @@ Libra Core is a javascript library client that can be used to interact with libr
 
 The end goal is to make it usable both in node and on browser clients too, but currently it is mostly compatible with node.
 
+## Table of Content
+
 <!-- toc -->
 
 - [Prepare](#prepare)
