@@ -119,6 +119,19 @@ await main();
 You can execute a program using `client.execute()` take a look at how `client.transferCoins()` uses it for transfer transactions.
 You are welcome to help contribute to making this documentation better.
 
+### Query Transaction with Sequence Number
+```javascript
+async function main() {
+  const client = new LibraClient({ network: LibraNetwork.Testnet });
+  const accountAddress = '7f58df27522872ecfac340c5c072427e6f8083ca3c79bb748cdd1ae073dacc42';
+  const sequenceNumber = 43; //can also use a string for really large sequence numbers;
+  
+  const transaction = await client.getAccountTransaction(accountAddress, sequenceNumber);
+}
+
+await main();
+```
+
 ## Development
 - Clone the repository
 - Run `npm install` to install the dependency
