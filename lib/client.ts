@@ -1,11 +1,11 @@
 import axios from 'axios';
 import BigNumber from 'bignumber.js';
-import {credentials, ServiceError} from 'grpc';
+import { credentials, ServiceError } from 'grpc';
 
-import SHA3 from "sha3";
-import {AccountStateBlob, AccountStateWithProof} from './__generated__/account_state_blob_pb';
-import {AdmissionControlClient} from './__generated__/admission_control_grpc_pb';
-import {SubmitTransactionRequest, SubmitTransactionResponse} from './__generated__/admission_control_pb';
+import SHA3 from 'sha3';
+import { AccountStateBlob, AccountStateWithProof } from './__generated__/account_state_blob_pb';
+import { AdmissionControlClient } from './__generated__/admission_control_grpc_pb';
+import { SubmitTransactionRequest, SubmitTransactionResponse } from './__generated__/admission_control_pb';
 import {
   GetAccountStateRequest,
   GetAccountStateResponse,
@@ -13,12 +13,33 @@ import {
   ResponseItem,
   UpdateToLatestLedgerRequest,
 } from './__generated__/get_with_proof_pb';
-import {Program, RawTransaction, SignedTransaction, TransactionArgument} from './__generated__/transaction_pb';
-import {CursorBuffer} from './common/CursorBuffer';
+import { Program, RawTransaction, SignedTransaction, TransactionArgument } from './__generated__/transaction_pb';
+import {
+  BinaryError,
+  ExecutionStatus,
+  VMInvariantViolationError,
+  VMStatus,
+  VMValidationStatus,
+  VMVerificationStatus,
+  VMVerificationStatusList,
+} from './__generated__/vm_errors_pb';
+import { CursorBuffer } from './common/CursorBuffer';
 import HashSaltValues from './constants/HashSaltValues';
 import PathValues from './constants/PathValues';
-import {LibraTransaction} from './Transactions';
-import {Account, AccountAddress, AccountState, AccountStates} from './wallet/Accounts';
+import {
+  LibraDeserializationError,
+  LibraExecutionError,
+  LibraExecutionErrorType,
+  LibraInvariantViolationError,
+  LibraValidationStatusCode,
+  LibraValidationStatusError,
+  LibraVerificationError,
+  LibraVerificationStatusError,
+  LibraVerificationStatusKind,
+  LibraVMStatusError,
+} from './transaction/Errors';
+import { LibraTransaction, LibraTransactionResponse } from './Transactions';
+import { Account, AccountAddress, AccountState, AccountStates } from './wallet/Accounts';
 
 const DefaultFaucetServerHost = 'faucet.testnet.libra.org';
 const DefaultTestnetServerHost = 'ac.testnet.libra.org';
@@ -190,11 +211,8 @@ export class LibraClient {
     sender: Account,
     recipientAddress: string,
     numCoins: number | string | BigNumber,
-  ): Promise<SubmitTransactionResponse> {
-    return this.execute(
-        LibraTransaction.createTransfer(recipientAddress, new BigNumber(numCoins)),
-        sender,
-    );
+  ): Promise<LibraTransactionResponse> {
+    return this.execute(LibraTransaction.createTransfer(recipientAddress, new BigNumber(numCoins)), sender);
   }
 
   /**
@@ -203,10 +221,10 @@ export class LibraClient {
    * @param transaction
    * @param sender
    */
-  public async execute(transaction: LibraTransaction, sender: Account): Promise<SubmitTransactionResponse> {
+  public async execute(transaction: LibraTransaction, sender: Account): Promise<LibraTransactionResponse> {
     let senderAddress = transaction.sendersAddress;
     if (senderAddress.isDefault()) {
-        senderAddress = sender.getAddress();
+      senderAddress = sender.getAddress();
     }
     let sequenceNumber = transaction.sequenceNumber;
     if (sequenceNumber.isNegative()) {
@@ -219,10 +237,10 @@ export class LibraClient {
     program.setCode(transaction.program.code);
     const transactionArguments = new Array<TransactionArgument>();
     transaction.program.arguments.forEach(argument => {
-        const transactionArgument = new TransactionArgument();
-        transactionArgument.setType(argument.type);
-        transactionArgument.setData(argument.value);
-        transactionArguments.push(transactionArgument);
+      const transactionArgument = new TransactionArgument();
+      transactionArgument.setType(argument.type);
+      transactionArgument.setData(argument.value);
+      transactionArguments.push(transactionArgument);
     });
     program.setArgumentsList(transactionArguments);
     program.setModulesList(transaction.program.modules);
@@ -239,9 +257,9 @@ export class LibraClient {
     const request = new SubmitTransactionRequest();
     const rawTxnBytes = rawTransaction.serializeBinary();
     const hash = new SHA3(256)
-        .update(Buffer.from(HashSaltValues.rawTransactionHashSalt, 'hex'))
-        .update(Buffer.from(rawTxnBytes.buffer))
-        .digest();
+      .update(Buffer.from(HashSaltValues.rawTransactionHashSalt, 'hex'))
+      .update(Buffer.from(rawTxnBytes.buffer))
+      .digest();
     const senderSignature = sender.keyPair.sign(hash);
     signedTransaction.setRawTxnBytes(rawTxnBytes);
     signedTransaction.setSenderPublicKey(sender.keyPair.getPublicKey());
@@ -251,9 +269,21 @@ export class LibraClient {
     return new Promise((resolve, reject) => {
       this.client.submitTransaction(request, (error: ServiceError | null, response: SubmitTransactionResponse) => {
         if (error) {
+          // TBD: should this fail with only service error
+          // or should it fail if transaction is not acknowledged
           return reject(error);
         }
-        resolve(response);
+
+        const vmStatus = this._decodeVMStatus(response.getVmStatus());
+        resolve(
+          new LibraTransactionResponse(
+            transaction,
+            response.getValidatorId_asU8(),
+            response.getAcStatus(),
+            response.getMempoolStatus(),
+            vmStatus,
+          ),
+        );
       });
     });
   }
@@ -281,6 +311,64 @@ export class LibraClient {
     }
 
     return AccountState.from(state[PathValues.AccountStatePath]);
+  }
+
+  private _decodeVMStatus(vmStatus?: VMStatus): LibraVMStatusError | undefined {
+    if (vmStatus === undefined) {
+      return undefined;
+    }
+
+    let validationStatus: LibraValidationStatusError | undefined;
+    let verificationStatusErrors: LibraVerificationStatusError[] | undefined;
+    let invariantViolationError: LibraInvariantViolationError | undefined;
+    let deserializationError: LibraDeserializationError | undefined;
+    let executionError: LibraExecutionError | undefined;
+
+    if (vmStatus.hasValidation()) {
+      const validation = vmStatus.getValidation() as VMValidationStatus;
+      validationStatus = {
+        code: (validation.getCode() as unknown) as LibraValidationStatusCode,
+        message: validation.getMessage(),
+      };
+    }
+
+    if (vmStatus.hasVerification()) {
+      const verification = vmStatus.getVerification() as VMVerificationStatusList;
+      verificationStatusErrors = verification.getStatusListList().map(status => {
+        return new LibraVerificationStatusError(
+          (status.getErrorKind() as unknown) as LibraVerificationStatusKind,
+          status.getModuleIdx(),
+          (status.getErrorKind() as unknown) as LibraVerificationError,
+          status.getMessage(),
+        );
+      });
+    }
+
+    if (vmStatus.hasInvariantViolation()) {
+      const invariant = vmStatus.getInvariantViolation() as VMInvariantViolationError;
+      invariantViolationError = (invariant as unknown) as LibraInvariantViolationError;
+    }
+
+    if (vmStatus.hasDeserialization()) {
+      const deser = vmStatus.getDeserialization() as BinaryError;
+      deserializationError = (deser as unknown) as LibraDeserializationError;
+    }
+
+    if (vmStatus.hasExecution()) {
+      const execution = vmStatus.getExecution() as ExecutionStatus;
+      executionError = {
+        errorType: (execution.getExecutionStatusCase() as unknown) as LibraExecutionErrorType,
+      };
+    }
+
+    return new LibraVMStatusError(
+      vmStatus.getErrorTypeCase(),
+      validationStatus,
+      verificationStatusErrors,
+      invariantViolationError,
+      deserializationError,
+      executionError,
+    );
   }
 }
 

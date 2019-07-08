@@ -1,4 +1,4 @@
-import { Mnemonic } from '../lib/wallet/Mnemonic';
+import { Mnemonic } from '../lib';
 
 describe('LibraWallet', () => {
   describe('generateMnemonic()', () => {

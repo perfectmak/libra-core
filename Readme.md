@@ -113,8 +113,8 @@ await main();
 ```
 
 ### Executing Transactions with Custom Program
-You will eventually be able to transfer libra coins from your account to another account using `client.execute()` function, but it is also still a work in progress.
-You are welcome to help contribute to making this work as well.
+You can execute a program using `client.execute()` take a look at how `client.transferCoins()` uses it for transfer transactions.
+You are welcome to help contribute to making this documentation better.
 
 ## Development
 - Clone the repository
@@ -123,7 +123,9 @@ You are welcome to help contribute to making this work as well.
 - You might need to run `npm install -g grpc-tools` if you want to regenerate protobuffer classes
 
 ## Contribution
-Feel free to contribute by opening issues or PR's to this repository
+- If you notices a bug or anomaly, please open an issue to track it.
+- If you intend on working on a feature that doesn't have an issue yet. Please open an issue first so we can track its progress together.
+
 
 ## License
 MIT

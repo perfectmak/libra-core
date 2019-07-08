@@ -1,5 +1,4 @@
-import { LibraClient, LibraNetwork, LibraWallet } from '../lib';
-import {AdmissionControlStatus} from "../lib/__generated__/admission_control_pb";
+import { LibraClient, LibraNetwork, LibraWallet, LibraAdmissionControlStatus } from '../lib';
 
 describe('LibraClient', () => {
   it('should query account state and transfer', async () => {
@@ -29,8 +28,8 @@ describe('LibraClient', () => {
     // TEST TRANSFER TRANSACTION OF yAmount
     account1State = await client.getAccountState(account1Address);
     const response = await client.transferCoins(account1, account2Address, amountToTransfer);
-    expect(response.getAcStatus()).toEqual(AdmissionControlStatus.ACCEPTED);
-    
+    expect(response.acStatus).toEqual(LibraAdmissionControlStatus.ACCEPTED);
+
     // ensure new account balance is +yAmount
     await client.waitForConfirmation(account1.getAddress(), account1State.sequenceNumber.plus(1));
     const newAccount2State = await client.getAccountState(account2Address);
