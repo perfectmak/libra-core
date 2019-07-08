@@ -18,10 +18,11 @@
   },
   "scripts": {
     "build": "tsc",
+    "build:doc": "markdown-toc -i Readme.md",
     "format": "prettier --write \"lib/**/*.ts\" \"test/**/*.ts\"",
     "lint": "tslint -p tsconfig.json",
     "lint:fix": "tslint -p tsconfig.json --fix",
-    "prepare": "npm run build",
+    "prepare": "npm run build && npm run build:doc",
     "prepublishOnly": "npm test && npm run lint",
     "test": "jest"
   },
@@ -52,6 +53,7 @@
     "@types/node": "^12.0.8",
     "grpc_tools_node_protoc_ts": "^2.5.3",
     "jest": "^24.8.0",
+    "markdown-toc": "^1.2.0",
     "prettier": "^1.18.2",
     "ts-jest": "^24.0.2",
     "tslint": "^5.18.0",

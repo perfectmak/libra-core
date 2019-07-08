@@ -6,6 +6,23 @@ Libra Core is a javascript library client that can be used to interact with libr
 
 The end goal is to make it usable both in node and on browser clients too, but currently it is mostly compatible with node.
 
+<!-- toc -->
+
+- [Prepare](#prepare)
+- [Installation](#installation)
+- [Usage](#usage)
+  * [Creating an Account](#creating-an-account)
+  * [Minting Amount](#minting-amount)
+  * [Checking an address balance](#checking-an-address-balance)
+  * [Transferring Libra Coins](#transferring-libra-coins)
+  * [Executing Transactions with Custom Program](#executing-transactions-with-custom-program)
+  * [Query Transaction with Sequence Number](#query-transaction-with-sequence-number)
+- [Development](#development)
+- [Contribution](#contribution)
+- [License](#license)
+
+<!-- tocstop -->
+
 ## Prepare
 - Node ^v12.0.0 is reuiqred for sha3-256.
 You can use nvm to download/use node v12 by following.
@@ -125,7 +142,7 @@ async function main() {
   const client = new LibraClient({ network: LibraNetwork.Testnet });
   const accountAddress = '7f58df27522872ecfac340c5c072427e6f8083ca3c79bb748cdd1ae073dacc42';
   const sequenceNumber = 43; //can also use a string for really large sequence numbers;
-  
+
   const transaction = await client.getAccountTransaction(accountAddress, sequenceNumber);
 }
 
