@@ -229,7 +229,7 @@ enum RuntimeStatus {
 
 // user-defined assertion error code number
 message AssertionFailure {
-    uint64 assertion_error_code = 1;
+    uint64 assertion_error_code = 1 [jstype = JS_STRING];
 }
 
 message ArithmeticError {

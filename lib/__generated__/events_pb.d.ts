@@ -13,8 +13,8 @@ export class Event extends jspb.Message {
   getAccessPath(): access_path_pb.AccessPath | undefined;
   setAccessPath(value?: access_path_pb.AccessPath): void;
 
-  getSequenceNumber(): number;
-  setSequenceNumber(value: number): void;
+  getSequenceNumber(): string;
+  setSequenceNumber(value: string): void;
 
   getEventData(): Uint8Array | string;
   getEventData_asU8(): Uint8Array;
@@ -34,17 +34,17 @@ export class Event extends jspb.Message {
 export namespace Event {
   export type AsObject = {
     accessPath?: access_path_pb.AccessPath.AsObject;
-    sequenceNumber: number;
+    sequenceNumber: string;
     eventData: Uint8Array | string;
   };
 }
 
 export class EventWithProof extends jspb.Message {
-  getTransactionVersion(): number;
-  setTransactionVersion(value: number): void;
+  getTransactionVersion(): string;
+  setTransactionVersion(value: string): void;
 
-  getEventIndex(): number;
-  setEventIndex(value: number): void;
+  getEventIndex(): string;
+  setEventIndex(value: string): void;
 
   hasEvent(): boolean;
   clearEvent(): void;
@@ -68,8 +68,8 @@ export class EventWithProof extends jspb.Message {
 
 export namespace EventWithProof {
   export type AsObject = {
-    transactionVersion: number;
-    eventIndex: number;
+    transactionVersion: string;
+    eventIndex: string;
     event?: Event.AsObject;
     proof?: proof_pb.EventProof.AsObject;
   };

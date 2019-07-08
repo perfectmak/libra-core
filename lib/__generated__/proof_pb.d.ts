@@ -7,8 +7,8 @@ import * as jspb from 'google-protobuf';
 import * as transaction_info_pb from './transaction_info_pb';
 
 export class AccumulatorProof extends jspb.Message {
-  getBitmap(): number;
-  setBitmap(value: number): void;
+  getBitmap(): string;
+  setBitmap(value: string): void;
 
   clearNonDefaultSiblingsList(): void;
   getNonDefaultSiblingsList(): Array<Uint8Array | string>;
@@ -29,7 +29,7 @@ export class AccumulatorProof extends jspb.Message {
 
 export namespace AccumulatorProof {
   export type AsObject = {
-    bitmap: number;
+    bitmap: string;
     nonDefaultSiblingsList: Array<Uint8Array | string>;
   };
 }

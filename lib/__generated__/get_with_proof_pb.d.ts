@@ -12,8 +12,8 @@ import * as transaction_pb from './transaction_pb';
 import * as validator_change_pb from './validator_change_pb';
 
 export class UpdateToLatestLedgerRequest extends jspb.Message {
-  getClientKnownVersion(): number;
-  setClientKnownVersion(value: number): void;
+  getClientKnownVersion(): string;
+  setClientKnownVersion(value: string): void;
 
   clearRequestedItemsList(): void;
   getRequestedItemsList(): Array<RequestItem>;
@@ -35,7 +35,7 @@ export class UpdateToLatestLedgerRequest extends jspb.Message {
 
 export namespace UpdateToLatestLedgerRequest {
   export type AsObject = {
-    clientKnownVersion: number;
+    clientKnownVersion: string;
     requestedItemsList: Array<RequestItem.AsObject>;
   };
 }
@@ -244,8 +244,8 @@ export class GetAccountTransactionBySequenceNumberRequest extends jspb.Message {
   getAccount_asB64(): string;
   setAccount(value: Uint8Array | string): void;
 
-  getSequenceNumber(): number;
-  setSequenceNumber(value: number): void;
+  getSequenceNumber(): string;
+  setSequenceNumber(value: string): void;
 
   getFetchEvents(): boolean;
   setFetchEvents(value: boolean): void;
@@ -272,7 +272,7 @@ export class GetAccountTransactionBySequenceNumberRequest extends jspb.Message {
 export namespace GetAccountTransactionBySequenceNumberRequest {
   export type AsObject = {
     account: Uint8Array | string;
-    sequenceNumber: number;
+    sequenceNumber: string;
     fetchEvents: boolean;
   };
 }
@@ -320,14 +320,14 @@ export class GetEventsByEventAccessPathRequest extends jspb.Message {
   getAccessPath(): access_path_pb.AccessPath | undefined;
   setAccessPath(value?: access_path_pb.AccessPath): void;
 
-  getStartEventSeqNum(): number;
-  setStartEventSeqNum(value: number): void;
+  getStartEventSeqNum(): string;
+  setStartEventSeqNum(value: string): void;
 
   getAscending(): boolean;
   setAscending(value: boolean): void;
 
-  getLimit(): number;
-  setLimit(value: number): void;
+  getLimit(): string;
+  setLimit(value: string): void;
 
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): GetEventsByEventAccessPathRequest.AsObject;
@@ -348,9 +348,9 @@ export class GetEventsByEventAccessPathRequest extends jspb.Message {
 export namespace GetEventsByEventAccessPathRequest {
   export type AsObject = {
     accessPath?: access_path_pb.AccessPath.AsObject;
-    startEventSeqNum: number;
+    startEventSeqNum: string;
     ascending: boolean;
-    limit: number;
+    limit: string;
   };
 }
 
@@ -389,11 +389,11 @@ export namespace GetEventsByEventAccessPathResponse {
 }
 
 export class GetTransactionsRequest extends jspb.Message {
-  getStartVersion(): number;
-  setStartVersion(value: number): void;
+  getStartVersion(): string;
+  setStartVersion(value: string): void;
 
-  getLimit(): number;
-  setLimit(value: number): void;
+  getLimit(): string;
+  setLimit(value: string): void;
 
   getFetchEvents(): boolean;
   setFetchEvents(value: boolean): void;
@@ -413,8 +413,8 @@ export class GetTransactionsRequest extends jspb.Message {
 
 export namespace GetTransactionsRequest {
   export type AsObject = {
-    startVersion: number;
-    limit: number;
+    startVersion: string;
+    limit: string;
     fetchEvents: boolean;
   };
 }

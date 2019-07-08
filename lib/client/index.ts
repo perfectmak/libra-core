@@ -15,11 +15,7 @@ import {
   ResponseItem,
   UpdateToLatestLedgerRequest,
 } from '../__generated__/get_with_proof_pb';
-import {
-  RawTransaction,
-  SignedTransaction,
-  SignedTransactionWithProof,
-} from '../__generated__/transaction_pb';
+import { RawTransaction, SignedTransaction, SignedTransactionWithProof } from '../__generated__/transaction_pb';
 import HashSaltValues from '../constants/HashSaltValues';
 import ServerHosts from '../constants/ServerHosts';
 import { KeyPair, Signature } from '../crypto/Eddsa';
@@ -139,7 +135,7 @@ export class LibraClient {
     const requestItem = new RequestItem();
     const getTransactionRequest = new GetAccountTransactionBySequenceNumberRequest();
     getTransactionRequest.setAccount(accountAddress.toBytes());
-    getTransactionRequest.setSequenceNumber(parsedSequenceNumber.toNumber());
+    getTransactionRequest.setSequenceNumber(parsedSequenceNumber.toString(10));
     getTransactionRequest.setFetchEvents(fetchEvents);
     requestItem.setGetAccountTransactionBySequenceNumberRequest(getTransactionRequest);
 
