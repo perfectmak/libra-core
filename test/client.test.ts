@@ -31,7 +31,7 @@ describe('LibraClient', () => {
     expect(response.acStatus).toEqual(LibraAdmissionControlStatus.ACCEPTED);
 
     // ensure new account balance is +yAmount
-    await client.waitForConfirmation(account1.getAddress(), account1State.sequenceNumber.plus(1));
+    await response.awaitConfirmation(client);
     const newAccount2State = await client.getAccountState(account2Address);
     expect(newAccount2State.balance.toString(10)).toEqual(account2State.balance.plus(amountToTransfer).toString(10));
   }, 30000);

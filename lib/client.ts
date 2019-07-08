@@ -123,7 +123,7 @@ export class LibraClient {
             if (stateWithProof.hasBlob()) {
               const stateBlob = stateWithProof.getBlob() as AccountStateBlob;
               const blob = stateBlob.getBlob_asU8();
-              return this._decodeAccountStateBlob(blob);
+              return this.decodeAccountStateBlob(blob);
             }
 
             return AccountState.default(addresses[index]);
@@ -274,7 +274,7 @@ export class LibraClient {
           return reject(error);
         }
 
-        const vmStatus = this._decodeVMStatus(response.getVmStatus());
+        const vmStatus = this.decodeVMStatus(response.getVmStatus());
         resolve(
           new LibraTransactionResponse(
             transaction,
@@ -288,7 +288,7 @@ export class LibraClient {
     });
   }
 
-  private _decodeAccountStateBlob(blob: Uint8Array): AccountState {
+  private decodeAccountStateBlob(blob: Uint8Array): AccountState {
     const cursor = new CursorBuffer(blob);
     const blobLen = cursor.read32();
 
@@ -313,7 +313,7 @@ export class LibraClient {
     return AccountState.from(state[PathValues.AccountStatePath]);
   }
 
-  private _decodeVMStatus(vmStatus?: VMStatus): LibraVMStatusError | undefined {
+  private decodeVMStatus(vmStatus?: VMStatus): LibraVMStatusError | undefined {
     if (vmStatus === undefined) {
       return undefined;
     }

@@ -1,5 +1,6 @@
 import BigNumber from 'bignumber.js';
 import { TransactionArgument } from './__generated__/transaction_pb';
+import LibraClient from './client';
 import Addresses from './constants/Addresses';
 import ProgamBase64Codes from './constants/ProgamBase64Codes';
 import { LibraVMStatusError } from './transaction/Errors';
@@ -104,7 +105,14 @@ export class LibraTransactionResponse {
     this.vmStatus = vmStatus;
   }
 
-  // TODO: Add some helper methods to extract reason of failure
+  public async awaitConfirmation(client: LibraClient): Promise<void> {
+    return client.waitForConfirmation(
+      this.transaction.sendersAddress,
+      this.transaction.sequenceNumber.plus(1)
+    );
+  }
+
+  // TODO: Add some more helper methods to extract reason of failure
 }
 
 export enum LibraAdmissionControlStatus {

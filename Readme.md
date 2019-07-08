@@ -106,7 +106,10 @@ async function main() {
   });
   const account = wallet.newAccount();
   const account2Address = '854563c50d20788fb6c11fac1010b553d722edb0c02f87c2edbdd3923726d13f';
-  await client.transferCoins(account, account2Address, 1e6);
+  const response = await client.transferCoins(account, account2Address, 1e6);
+
+  // wait for transaction confirmation
+  await response.awaitConfirmation(client);
 }
 
 await main();
