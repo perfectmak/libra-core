@@ -42,16 +42,8 @@ import {
   LibraDeserializationError,
   LibraExecutionError,
   LibraExecutionErrorType,
-  LibraInvariantViolationError,
-  LibraValidationStatusCode,
-  LibraValidationStatusError,
-  LibraVerificationError,
-  LibraVerificationStatusError,
-  LibraVerificationStatusKind,
-  LibraVMStatusError,
-} from './transaction/Errors';
-import {
   LibraGasConstraint,
+  LibraInvariantViolationError,
   LibraProgram,
   LibraProgramArgumentType,
   LibraSignedTransaction,
@@ -59,7 +51,13 @@ import {
   LibraTransaction,
   LibraTransactionEvent,
   LibraTransactionResponse,
-} from './Transactions';
+  LibraValidationStatusCode,
+  LibraValidationStatusError,
+  LibraVerificationError,
+  LibraVerificationStatusError,
+  LibraVerificationStatusKind,
+  LibraVMStatusError,
+} from './transaction';
 import { Account, AccountAddress, AccountAddressLike, AccountState, AccountStates } from './wallet/Accounts';
 
 const DefaultFaucetServerHost = 'faucet.testnet.libra.org';

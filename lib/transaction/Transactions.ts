@@ -1,10 +1,9 @@
 import BigNumber from 'bignumber.js';
-import LibraClient from './client';
-import Addresses from './constants/Addresses';
-import ProgamBase64Codes from './constants/ProgamBase64Codes';
-import { KeyPair } from './crypto/EdDsa';
-import { LibraVMStatusError } from './transaction/Errors';
-import { AccountAddress } from './wallet/Accounts';
+import LibraClient from '../client';
+import Addresses from '../constants/Addresses';
+import ProgamBase64Codes from '../constants/ProgamBase64Codes';
+import { AccountAddress } from '../wallet/Accounts';
+import { LibraVMStatusError } from './Errors';
 
 export interface LibraProgram {
   code: Uint8Array;
