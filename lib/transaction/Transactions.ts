@@ -1,23 +1,29 @@
 import BigNumber from 'bignumber.js';
-import { TransactionArgument } from './__generated__/transaction_pb';
-import LibraClient from './client';
-import Addresses from './constants/Addresses';
-import ProgamBase64Codes from './constants/ProgamBase64Codes';
-import { LibraVMStatusError } from './transaction/Errors';
-import { AccountAddress } from './wallet/Accounts';
+import LibraClient from '../client';
+import Addresses from '../constants/Addresses';
+import ProgamBase64Codes from '../constants/ProgamBase64Codes';
+import { AccountAddress } from '../wallet/Accounts';
+import { LibraVMStatusError } from './Errors';
 
-interface LibraProgram {
+export interface LibraProgram {
   code: Uint8Array;
   arguments: LibraProgramArgument[];
   modules: Uint8Array[];
 }
 
 interface LibraProgramArgument {
-  type: TransactionArgument.ArgType;
+  type: LibraProgramArgumentType;
   value: Uint8Array;
 }
 
-interface LibraGasConstraint {
+export enum LibraProgramArgumentType {
+  U64 = 0,
+  ADDRESS = 1,
+  STRING = 2,
+  BYTEARRAY = 3,
+}
+
+export interface LibraGasConstraint {
   maxGasAmount: BigNumber;
   gasUnitPrice: BigNumber;
 }
@@ -28,11 +34,11 @@ export class LibraTransaction {
     amountBuffer.writeBigUInt64LE(BigInt(numAccount), 0);
     const programArguments: LibraProgramArgument[] = [
       {
-        type: TransactionArgument.ArgType.ADDRESS,
+        type: LibraProgramArgumentType.ADDRESS,
         value: Uint8Array.from(Buffer.from(recipientAddress, 'hex')),
       },
       {
-        type: TransactionArgument.ArgType.U64,
+        type: LibraProgramArgumentType.U64,
         value: Uint8Array.from(amountBuffer),
       },
     ];
@@ -53,6 +59,7 @@ export class LibraTransaction {
     );
   }
 
+  // NOTE: Ensure this raw bytes is always set used internally
   public program: LibraProgram;
   public gasContraint: LibraGasConstraint;
   public expirationTime: BigNumber;
@@ -84,21 +91,20 @@ export class LibraTransaction {
 }
 
 export class LibraTransactionResponse {
-  // TODO(perfectmak): Change LibraTransaction to LibraSignedTransaction
-  public readonly transaction: LibraTransaction;
+  public readonly signedTransaction: LibraSignedTransaction;
   public readonly validatorId: Uint8Array;
   public readonly acStatus?: LibraAdmissionControlStatus;
   public readonly mempoolStatus?: LibraMempoolTransactionStatus;
   public readonly vmStatus?: LibraVMStatusError;
 
   constructor(
-    transaction: LibraTransaction,
+    signedTransaction: LibraSignedTransaction,
     validatorId: Uint8Array,
     acStatus?: LibraAdmissionControlStatus | number,
     mempoolStatus?: LibraMempoolTransactionStatus | number,
     vmStatus?: LibraVMStatusError,
   ) {
-    this.transaction = transaction;
+    this.signedTransaction = signedTransaction;
     this.validatorId = validatorId;
     this.acStatus = acStatus;
     this.mempoolStatus = mempoolStatus;
@@ -107,12 +113,10 @@ export class LibraTransactionResponse {
 
   public async awaitConfirmation(client: LibraClient): Promise<void> {
     return client.waitForConfirmation(
-      this.transaction.sendersAddress,
-      this.transaction.sequenceNumber.plus(1)
+      this.signedTransaction.transaction.sendersAddress,
+      this.signedTransaction.transaction.sequenceNumber.plus(1),
     );
   }
-
-  // TODO: Add some more helper methods to extract reason of failure
 }
 
 export enum LibraAdmissionControlStatus {
@@ -128,4 +132,44 @@ export enum LibraMempoolTransactionStatus {
   MEMPOOLISFULL = 3,
   TOOMANYTRANSACTIONS = 4,
   INVALIDUPDATE = 5,
+}
+export class LibraSignedTransaction {
+  public readonly transaction: LibraTransaction;
+  public readonly publicKey: Uint8Array;
+  public readonly signature: Uint8Array;
+
+  constructor(transaction: LibraTransaction, publicKey: Uint8Array, signature: Uint8Array) {
+    this.transaction = transaction;
+    this.publicKey = publicKey;
+    this.signature = signature;
+  }
+}
+
+export class LibraSignedTransactionWithProof {
+  public readonly signedTransaction: LibraSignedTransaction;
+  public readonly proof?: LibraSignedTransactionProof;
+  public readonly events?: LibraTransactionEvent[];
+
+  constructor(signedTransaction: LibraSignedTransaction, proof?: object, events?: LibraTransactionEvent[]) {
+    this.signedTransaction = signedTransaction;
+    this.proof = proof;
+    this.events = events;
+  }
+}
+
+// TODO: Implement abstraction over the pb classes for transaction proof
+class LibraSignedTransactionProof {}
+
+export class LibraTransactionEvent {
+  public readonly data: Uint8Array; // eventData
+  public readonly sequenceNumber: BigNumber;
+  public readonly address?: AccountAddress;
+  public readonly path?: Uint8Array;
+
+  constructor(data: Uint8Array, sequenceNumber: BigNumber | string, address?: AccountAddress, path?: Uint8Array) {
+    this.data = data;
+    this.sequenceNumber = new BigNumber(sequenceNumber);
+    this.address = address;
+    this.path = path;
+  }
 }
