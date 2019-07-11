@@ -1,4 +1,5 @@
 import BigNumber from 'bignumber.js';
+import { AdmissionControlStatus } from '../__generated__/admission_control_pb';
 import LibraClient from '../client';
 import Addresses from '../constants/Addresses';
 import ProgamBase64Codes from '../constants/ProgamBase64Codes';

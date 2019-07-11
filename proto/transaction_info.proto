@@ -22,5 +22,5 @@ message TransactionInfo {
   bytes event_root_hash = 3;
 
   // The amount of gas used by this transaction.
-  uint64 gas_used = 4 [jstype = JS_STRING];
+  uint64 gas_used = 4;
 }

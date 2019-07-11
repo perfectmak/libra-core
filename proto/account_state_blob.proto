@@ -10,7 +10,7 @@ import "proof.proto";
 message AccountStateBlob { bytes blob = 1; }
 
 message AccountStateWithProof {
-  uint64 version = 1 [jstype = JS_STRING];
+  uint64 version = 1;
   AccountStateBlob blob = 2;
   AccountStateProof proof = 3;
 }

@@ -135,7 +135,7 @@ message UpdateToLatestLedgerRequest {
     // set this to the version it obtained the last time it synced with the
     // chain. If this is the first time ever the client sends a request, it must
     // use the waypoint hard-coded in its software.
-    uint64 client_known_version = 1 [jstype = JS_STRING];
+    uint64 client_known_version = 1;
 
     // The items for which we are requesting data in this API call.
     repeated RequestItem requested_items = 2;
@@ -231,7 +231,7 @@ message GetAccountTransactionBySequenceNumberRequest {
     // Account for which to query transactions
     bytes account = 1;
 
-    uint64 sequence_number = 2 [jstype = JS_STRING];
+    uint64 sequence_number = 2;
 
     // Set to true to fetch events for the transaction at this version
     bool fetch_events = 3;
@@ -261,7 +261,7 @@ message GetEventsByEventAccessPathRequest {
 
     // The sequence number of the event to start with for this query. Use a
     // sequence number of MAX_INT to represent the latest.
-    uint64 start_event_seq_num = 2 [jstype = JS_STRING];
+    uint64 start_event_seq_num = 2;
 
     // If ascending is true this query will return up to `limit` events that were
     // emitted after `start_event_seq_num`. Otherwise it will return up to `limit`
@@ -269,7 +269,7 @@ message GetEventsByEventAccessPathRequest {
     bool ascending = 3;
 
     // Limit number of results
-    uint64 limit = 4 [jstype = JS_STRING];
+    uint64 limit = 4;
 }
 
 message GetEventsByEventAccessPathResponse {
@@ -296,10 +296,10 @@ message GetEventsByEventAccessPathResponse {
 message GetTransactionsRequest {
     // The version of the transaction to start with for this query.  Use a version
     // of MAX_INT to represent the latest.
-    uint64 start_version = 1 [jstype = JS_STRING];
+    uint64 start_version = 1;
 
     // Limit number of results
-    uint64 limit = 2 [jstype = JS_STRING];
+    uint64 limit = 2;
 
     // Set to true to fetch events for the transaction at each version
     bool fetch_events = 3;

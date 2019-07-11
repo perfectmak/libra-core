@@ -15,14 +15,14 @@ import "proof.proto";
 // An event emitted from a smart contract
 message Event {
     AccessPath access_path = 1;
-    uint64 sequence_number = 2 [jstype = JS_STRING];
+    uint64 sequence_number = 2;
     bytes event_data = 3;
 }
 
 // An event along with the proof for the event
 message EventWithProof {
-  uint64 transaction_version = 1 [jstype = JS_STRING];
-  uint64 event_index = 2 [jstype = JS_STRING];
+  uint64 transaction_version = 1;
+  uint64 event_index = 2;
   Event event = 3;
   EventProof proof = 4;
 }
