@@ -1,4 +1,4 @@
-import diff from 'jest-diff';
+import * as diff from 'jest-diff';
 
 declare global {
   namespace jest {
