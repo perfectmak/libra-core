@@ -10,7 +10,7 @@ describe('LibraWallet', () => {
         mnemonics.push(mnemonic);
       }
 
-      expect([...Array.from(new Set(mnemonics))].length).toBe(100);
+      expect([...new Set(mnemonics)].length).toBe(100);
     });
   });
 });

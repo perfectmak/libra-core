@@ -1,5 +1,4 @@
 import BigNumber from 'bignumber.js';
-import { AdmissionControlStatus } from '../__generated__/admission_control_pb';
 import LibraClient from '../client';
 import Addresses from '../constants/Addresses';
 import ProgamBase64Codes from '../constants/ProgamBase64Codes';
@@ -124,6 +123,7 @@ export enum LibraAdmissionControlStatus {
   ACCEPTED = 0,
   BLACKLISTED = 1,
   REJECTED = 2,
+  UNKNOWN = -1,
 }
 
 export enum LibraMempoolTransactionStatus {
@@ -133,6 +133,7 @@ export enum LibraMempoolTransactionStatus {
   MEMPOOLISFULL = 3,
   TOOMANYTRANSACTIONS = 4,
   INVALIDUPDATE = 5,
+  UNKNOWN = -1,
 }
 export class LibraSignedTransaction {
   public readonly transaction: LibraTransaction;

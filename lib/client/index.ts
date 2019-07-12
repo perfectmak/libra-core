@@ -25,7 +25,7 @@ import HashSaltValues from '../constants/HashSaltValues';
 import ServerHosts from '../constants/ServerHosts';
 import { KeyPair, Signature } from '../crypto/Eddsa';
 import {
-  LibraAdmissionControlStatus,
+  LibraAdmissionControlStatus, LibraMempoolTransactionStatus,
   LibraSignedTransaction,
   LibraSignedTransactionWithProof,
   LibraTransaction,
@@ -286,10 +286,10 @@ export class LibraClient {
           new LibraTransactionResponse(
             new LibraSignedTransaction(transaction, sender.keyPair.getPublicKey(), senderSignature),
             response.getValidatorId_asU8(),
-            response.getAcStatus() === undefined ? -1 : (response.getAcStatus() as AdmissionControlStatus).getCode(),
-            response.getMempoolStatus() === undefined
-              ? -1
-              : (response.getMempoolStatus() as mempool_status_pb.MempoolAddTransactionStatus).getCode(),
+            response.hasAcStatus()
+              ? (response.getAcStatus() as AdmissionControlStatus).getCode() : LibraAdmissionControlStatus.UNKNOWN,
+            response.hasMempoolStatus()
+              ? (response.getMempoolStatus() as mempool_status_pb.MempoolAddTransactionStatus).getCode() : LibraMempoolTransactionStatus.UNKNOWN,
             vmStatus,
           ),
         );
