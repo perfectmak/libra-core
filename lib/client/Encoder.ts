@@ -42,10 +42,10 @@ export class ClientEncoder {
     program.setArgumentsList(transactionArguments);
     program.setModulesList(transaction.program.modules);
     const rawTransaction = new RawTransaction();
-    rawTransaction.setExpirationTime(transaction.expirationTime.toString(10));
-    rawTransaction.setGasUnitPrice(transaction.gasContraint.gasUnitPrice.toString(10));
-    rawTransaction.setMaxGasAmount(transaction.gasContraint.maxGasAmount.toString(10));
-    rawTransaction.setSequenceNumber(sequenceNumber.toString(10));
+    rawTransaction.setExpirationTime(transaction.expirationTime.toNumber());
+    rawTransaction.setGasUnitPrice(transaction.gasContraint.gasUnitPrice.toNumber());
+    rawTransaction.setMaxGasAmount(transaction.gasContraint.maxGasAmount.toNumber());
+    rawTransaction.setSequenceNumber(sequenceNumber.toNumber());
     rawTransaction.setProgram(program);
     rawTransaction.setSenderAccount(senderAddress.toBytes());
 
