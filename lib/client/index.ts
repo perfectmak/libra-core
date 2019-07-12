@@ -141,7 +141,7 @@ export class LibraClient {
     const requestItem = new RequestItem();
     const getTransactionRequest = new GetAccountTransactionBySequenceNumberRequest();
     getTransactionRequest.setAccount(accountAddress.toBytes());
-    getTransactionRequest.setSequenceNumber(parsedSequenceNumber.toNumber());
+    getTransactionRequest.setSequenceNumber(parsedSequenceNumber.toString(10));
     getTransactionRequest.setFetchEvents(fetchEvents);
     requestItem.setGetAccountTransactionBySequenceNumberRequest(getTransactionRequest);
 
@@ -287,7 +287,9 @@ export class LibraClient {
             new LibraSignedTransaction(transaction, sender.keyPair.getPublicKey(), senderSignature),
             response.getValidatorId_asU8(),
             response.getAcStatus() === undefined ? -1 : (response.getAcStatus() as AdmissionControlStatus).getCode(),
-            response.getMempoolStatus() === undefined ? -1 : (response.getMempoolStatus() as mempool_status_pb.MempoolAddTransactionStatus).getCode(),
+            response.getMempoolStatus() === undefined
+              ? -1
+              : (response.getMempoolStatus() as mempool_status_pb.MempoolAddTransactionStatus).getCode(),
             vmStatus,
           ),
         );
