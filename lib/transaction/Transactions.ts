@@ -123,6 +123,7 @@ export enum LibraAdmissionControlStatus {
   ACCEPTED = 0,
   BLACKLISTED = 1,
   REJECTED = 2,
+  UNKNOWN = -1,
 }
 
 export enum LibraMempoolTransactionStatus {
@@ -132,6 +133,7 @@ export enum LibraMempoolTransactionStatus {
   MEMPOOLISFULL = 3,
   TOOMANYTRANSACTIONS = 4,
   INVALIDUPDATE = 5,
+  UNKNOWN = -1,
 }
 export class LibraSignedTransaction {
   public readonly transaction: LibraTransaction;

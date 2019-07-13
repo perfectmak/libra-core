@@ -4,6 +4,7 @@
 /* tslint:disable */
 
 import * as jspb from 'google-protobuf';
+import * as language_storage_pb from './language_storage_pb';
 
 export class VMValidationStatus extends jspb.Message {
   getCode(): VMValidationStatusCode;
@@ -67,6 +68,11 @@ export class VMVerificationStatus extends jspb.Message {
   getMessage(): string;
   setMessage(value: string): void;
 
+  hasDependencyId(): boolean;
+  clearDependencyId(): void;
+  getDependencyId(): language_storage_pb.ModuleId | undefined;
+  setDependencyId(value?: language_storage_pb.ModuleId): void;
+
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): VMVerificationStatus.AsObject;
   static toObject(includeInstance: boolean, msg: VMVerificationStatus): VMVerificationStatus.AsObject;
@@ -83,11 +89,13 @@ export namespace VMVerificationStatus {
     moduleIdx: number;
     errorKind: VMVerificationErrorKind;
     message: string;
+    dependencyId?: language_storage_pb.ModuleId.AsObject;
   };
 
   export enum StatusKind {
     SCRIPT = 0,
     MODULE = 1,
+    DEPENDENCY = 2,
   }
 }
 

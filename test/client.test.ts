@@ -1,5 +1,5 @@
+import { LibraAdmissionControlStatus, LibraClient, LibraNetwork, LibraWallet } from '../lib';
 import './utils';
-import { LibraClient, LibraNetwork, LibraWallet, LibraAdmissionControlStatus } from '../lib';
 
 describe('LibraClient', () => {
   it('should query account state and transfer', async () => {

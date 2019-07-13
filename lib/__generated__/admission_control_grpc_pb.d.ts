@@ -6,11 +6,9 @@
 import * as grpc from 'grpc';
 import * as admission_control_pb from './admission_control_pb';
 import * as get_with_proof_pb from './get_with_proof_pb';
-import * as transaction_pb from './transaction_pb';
-import * as proof_pb from './proof_pb';
-import * as ledger_info_pb from './ledger_info_pb';
-import * as vm_errors_pb from './vm_errors_pb';
 import * as mempool_status_pb from './mempool_status_pb';
+import * as transaction_pb from './transaction_pb';
+import * as vm_errors_pb from './vm_errors_pb';
 
 interface IAdmissionControlService extends grpc.ServiceDefinition<grpc.UntypedServiceImplementation> {
   submitTransaction: IAdmissionControlService_ISubmitTransaction;

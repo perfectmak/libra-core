@@ -5,7 +5,11 @@ import { credentials, ServiceError } from 'grpc';
 import SHA3 from 'sha3';
 import { AccountStateBlob, AccountStateWithProof } from '../__generated__/account_state_blob_pb';
 import { AdmissionControlClient } from '../__generated__/admission_control_grpc_pb';
-import { SubmitTransactionRequest, SubmitTransactionResponse } from '../__generated__/admission_control_pb';
+import {
+  AdmissionControlStatus,
+  SubmitTransactionRequest,
+  SubmitTransactionResponse,
+} from '../__generated__/admission_control_pb';
 import {
   GetAccountStateRequest,
   GetAccountStateResponse,
@@ -15,11 +19,13 @@ import {
   ResponseItem,
   UpdateToLatestLedgerRequest,
 } from '../__generated__/get_with_proof_pb';
+import * as mempool_status_pb from '../__generated__/mempool_status_pb';
 import { RawTransaction, SignedTransaction, SignedTransactionWithProof } from '../__generated__/transaction_pb';
 import HashSaltValues from '../constants/HashSaltValues';
 import ServerHosts from '../constants/ServerHosts';
 import { KeyPair, Signature } from '../crypto/Eddsa';
 import {
+  LibraAdmissionControlStatus, LibraMempoolTransactionStatus,
   LibraSignedTransaction,
   LibraSignedTransactionWithProof,
   LibraTransaction,
@@ -280,8 +286,10 @@ export class LibraClient {
           new LibraTransactionResponse(
             new LibraSignedTransaction(transaction, sender.keyPair.getPublicKey(), senderSignature),
             response.getValidatorId_asU8(),
-            response.getAcStatus(),
-            response.getMempoolStatus(),
+            response.hasAcStatus()
+              ? (response.getAcStatus() as AdmissionControlStatus).getCode() : LibraAdmissionControlStatus.UNKNOWN,
+            response.hasMempoolStatus()
+              ? (response.getMempoolStatus() as mempool_status_pb.MempoolAddTransactionStatus).getCode() : LibraMempoolTransactionStatus.UNKNOWN,
             vmStatus,
           ),
         );
