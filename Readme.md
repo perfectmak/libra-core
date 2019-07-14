@@ -26,7 +26,7 @@ The end goal is to make it usable both in node and on browser clients too, but c
 <!-- tocstop -->
 
 ## Prepare
-- Node ^v12.0.0 is reuiqred for sha3-256.
+- Node ^v12.0.0 is required for sha3-256.
 You can use nvm to download/use node v12 by following.
 ```sh
 nvm install 12
