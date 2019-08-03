@@ -23,6 +23,7 @@ export class AccountState {
       new BigNumber(0),
       new BigNumber(0),
       new BigNumber(0),
+      true
     );
   }
 
@@ -32,17 +33,19 @@ export class AccountState {
     const authenticationKeyLen = cursor.read32();
     const authenticationKey = cursor.readXBytes(authenticationKeyLen);
     const balance = cursor.read64();
+    const delegatedWithdrawalCapability = cursor.readBool();
     const receivedEventsCount = cursor.read64();
     const sentEventsCount = cursor.read64();
     const sequenceNumber = cursor.read64();
 
-    return new AccountState(authenticationKey, balance, receivedEventsCount, sentEventsCount, sequenceNumber);
+    return new AccountState(authenticationKey, balance, receivedEventsCount, sentEventsCount, sequenceNumber, delegatedWithdrawalCapability);
   }
   public readonly authenticationKey: Uint8Array;
   public readonly balance: BigNumber;
   public readonly receivedEventsCount: BigNumber;
   public readonly sentEventsCount: BigNumber;
   public readonly sequenceNumber: BigNumber;
+  public readonly delegatedWithdrawalCapability: boolean;
 
   private constructor(
     authenticationKey: Uint8Array,
@@ -50,12 +53,14 @@ export class AccountState {
     receivedEventsCount: BigNumber,
     sentEventsCount: BigNumber,
     sequenceNumber: BigNumber,
+    delegatedWithdrawalCapability: boolean,
   ) {
     this.balance = balance;
     this.sequenceNumber = sequenceNumber;
     this.authenticationKey = authenticationKey;
     this.sentEventsCount = sentEventsCount;
     this.receivedEventsCount = receivedEventsCount;
+    this.delegatedWithdrawalCapability = delegatedWithdrawalCapability;
   }
 }
 
