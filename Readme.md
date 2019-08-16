@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/suraneti/libra-core.svg?branch=master)](https://travis-ci.org/suraneti/libra-core)
+
 # Libra Core 
 
 Libra Core is a javascript library client that can be used to interact with libra nodes. It is built using typescript.
