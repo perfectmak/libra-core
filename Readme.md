@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/suraneti/libra-core.svg?branch=master)](https://travis-ci.org/suraneti/libra-core)
+[![Build Status](https://travis-ci.org/perfectmak/libra-core.svg?branch=master)](https://travis-ci.org/perfectmak/libra-core)
 
 # Libra Core 
 
