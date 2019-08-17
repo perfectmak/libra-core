@@ -2,7 +2,6 @@ import { LibraAdmissionControlStatus, LibraClient, LibraNetwork, LibraWallet } f
 import './utils';
 
 describe('LibraClient', () => {
-  // skipping tests because of faucet failure in the meantime for release
   xit('should query account state and transfer', async () => {
     const client = new LibraClient({ network: LibraNetwork.Testnet });
     const wallet = new LibraWallet({
