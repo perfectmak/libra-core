@@ -182,7 +182,7 @@ export class LibraClient {
     const serverHost = this.config.faucetServerHost || ServerHosts.DefaultFaucet;
     const coins = new BigNumber(numCoins).toString(10);
     const address = receiver.toString();
-    const response = await axios.get(`http://${serverHost}?amount=${coins}&address=${address}`);
+    const response = await axios.post(`http://${serverHost}?amount=${coins}&address=${address}`);
 
     if (response.status !== 200) {
       throw new Error(`Failed to query faucet service. Code: ${response.status}, Err: ${response.data.toString()}`);
