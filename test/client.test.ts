@@ -2,7 +2,7 @@ import { LibraAdmissionControlStatus, LibraClient, LibraNetwork, LibraWallet } f
 import './utils';
 
 describe('LibraClient', () => {
-  xit('should query account state and transfer', async () => {
+  it('should query account state and transfer', async () => {
     const client = new LibraClient({ network: LibraNetwork.Testnet });
     const wallet = new LibraWallet({
       mnemonic:

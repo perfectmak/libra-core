@@ -54,7 +54,7 @@ export class LibraTransaction {
         maxGasAmount: new BigNumber(1000000),
       },
       `${Math.floor(new Date().getTime() / 1000) + 100}`,
-      new Uint8Array(Addresses.AddressLength),
+      new Uint8Array(Buffer.from(Addresses.MinterAddress, 'hex')),
       '-1',
     );
   }
