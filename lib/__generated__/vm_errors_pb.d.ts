@@ -101,24 +101,24 @@ export namespace VMVerificationStatus {
 
 }
 
-export class AssertionFailure extends jspb.Message { 
-    getAssertionErrorCode(): string;
-    setAssertionErrorCode(value: string): void;
+export class Aborted extends jspb.Message { 
+    getAbortedErrorCode(): number;
+    setAbortedErrorCode(value: number): void;
 
 
     serializeBinary(): Uint8Array;
-    toObject(includeInstance?: boolean): AssertionFailure.AsObject;
-    static toObject(includeInstance: boolean, msg: AssertionFailure): AssertionFailure.AsObject;
+    toObject(includeInstance?: boolean): Aborted.AsObject;
+    static toObject(includeInstance: boolean, msg: Aborted): Aborted.AsObject;
     static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
     static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
-    static serializeBinaryToWriter(message: AssertionFailure, writer: jspb.BinaryWriter): void;
-    static deserializeBinary(bytes: Uint8Array): AssertionFailure;
-    static deserializeBinaryFromReader(message: AssertionFailure, reader: jspb.BinaryReader): AssertionFailure;
+    static serializeBinaryToWriter(message: Aborted, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): Aborted;
+    static deserializeBinaryFromReader(message: Aborted, reader: jspb.BinaryReader): Aborted;
 }
 
-export namespace AssertionFailure {
+export namespace Aborted {
     export type AsObject = {
-        assertionErrorCode: string,
+        abortedErrorCode: number,
     }
 }
 
@@ -189,10 +189,10 @@ export class ExecutionStatus extends jspb.Message {
     setRuntimeStatus(value: RuntimeStatus): void;
 
 
-    hasAssertionFailure(): boolean;
-    clearAssertionFailure(): void;
-    getAssertionFailure(): AssertionFailure | undefined;
-    setAssertionFailure(value?: AssertionFailure): void;
+    hasAborted(): boolean;
+    clearAborted(): void;
+    getAborted(): Aborted | undefined;
+    setAborted(value?: Aborted): void;
 
 
     hasArithmeticError(): boolean;
@@ -222,7 +222,7 @@ export class ExecutionStatus extends jspb.Message {
 export namespace ExecutionStatus {
     export type AsObject = {
         runtimeStatus: RuntimeStatus,
-        assertionFailure?: AssertionFailure.AsObject,
+        aborted?: Aborted.AsObject,
         arithmeticError?: ArithmeticError.AsObject,
         referenceError?: DynamicReferenceError.AsObject,
     }
@@ -232,7 +232,7 @@ export namespace ExecutionStatus {
     
     RUNTIME_STATUS = 1,
 
-    ASSERTION_FAILURE = 2,
+    ABORTED = 2,
 
     ARITHMETIC_ERROR = 3,
 
@@ -335,72 +335,79 @@ export enum VMValidationStatusCode {
 export enum VMVerificationErrorKind {
     UNKNOWNVERIFICATIONERROR = 0,
     INDEXOUTOFBOUNDS = 1,
-    RANGEOUTOFBOUNDS = 2,
-    INVALIDSIGNATURETOKEN = 3,
-    INVALIDFIELDDEFREFERENCE = 4,
-    RECURSIVESTRUCTDEFINITION = 5,
-    INVALIDRESOURCEFIELD = 6,
-    INVALIDFALLTHROUGH = 7,
-    JOINFAILURE = 8,
-    NEGATIVESTACKSIZEWITHINBLOCK = 9,
-    UNBALANCEDSTACK = 10,
-    INVALIDMAINFUNCTIONSIGNATURE = 11,
-    DUPLICATEELEMENT = 12,
-    INVALIDMODULEHANDLE = 13,
-    UNIMPLEMENTEDHANDLE = 14,
-    INCONSISTENTFIELDS = 15,
-    UNUSEDFIELDS = 16,
-    LOOKUPFAILED = 17,
-    VISIBILITYMISMATCH = 18,
-    TYPERESOLUTIONFAILURE = 19,
-    TYPEMISMATCH = 20,
-    MISSINGDEPENDENCY = 21,
-    POPREFERENCEERROR = 22,
-    POPRESOURCEERROR = 23,
-    RELEASEREFTYPEMISMATCHERROR = 24,
-    BRTYPEMISMATCHERROR = 25,
-    ASSERTTYPEMISMATCHERROR = 26,
-    STLOCTYPEMISMATCHERROR = 27,
-    STLOCUNSAFETODESTROYERROR = 28,
-    RETUNSAFETODESTROYERROR = 29,
-    RETTYPEMISMATCHERROR = 30,
-    FREEZEREFTYPEMISMATCHERROR = 31,
-    FREEZEREFEXISTSMUTABLEBORROWERROR = 32,
-    BORROWFIELDTYPEMISMATCHERROR = 33,
-    BORROWFIELDBADFIELDERROR = 34,
-    BORROWFIELDEXISTSMUTABLEBORROWERROR = 35,
-    COPYLOCUNAVAILABLEERROR = 36,
-    COPYLOCRESOURCEERROR = 37,
-    COPYLOCEXISTSBORROWERROR = 38,
-    MOVELOCUNAVAILABLEERROR = 39,
-    MOVELOCEXISTSBORROWERROR = 40,
-    BORROWLOCREFERENCEERROR = 41,
-    BORROWLOCUNAVAILABLEERROR = 42,
-    BORROWLOCEXISTSBORROWERROR = 43,
-    CALLTYPEMISMATCHERROR = 44,
-    CALLBORROWEDMUTABLEREFERENCEERROR = 45,
-    PACKTYPEMISMATCHERROR = 46,
-    UNPACKTYPEMISMATCHERROR = 47,
-    READREFTYPEMISMATCHERROR = 48,
-    READREFRESOURCEERROR = 49,
-    READREFEXISTSMUTABLEBORROWERROR = 50,
-    WRITEREFTYPEMISMATCHERROR = 51,
-    WRITEREFRESOURCEERROR = 52,
-    WRITEREFEXISTSBORROWERROR = 53,
-    WRITEREFNOMUTABLEREFERENCEERROR = 54,
-    INTEGEROPTYPEMISMATCHERROR = 55,
-    BOOLEANOPTYPEMISMATCHERROR = 56,
-    EQUALITYOPTYPEMISMATCHERROR = 57,
-    EXISTSRESOURCETYPEMISMATCHERROR = 58,
-    BORROWGLOBALTYPEMISMATCHERROR = 59,
-    BORROWGLOBALNORESOURCEERROR = 60,
-    MOVEFROMTYPEMISMATCHERROR = 61,
-    MOVEFROMNORESOURCEERROR = 62,
-    MOVETOSENDERTYPEMISMATCHERROR = 63,
-    MOVETOSENDERNORESOURCEERROR = 64,
-    CREATEACCOUNTTYPEMISMATCHERROR = 65,
-    MODULEADDRESSDOESNOTMATCHSENDER = 66,
-    NOMODULEHANDLES = 67,
+    CODEUNITINDEXOUTOFBOUNDS = 2,
+    RANGEOUTOFBOUNDS = 3,
+    INVALIDSIGNATURETOKEN = 4,
+    INVALIDFIELDDEFREFERENCE = 5,
+    RECURSIVESTRUCTDEFINITION = 6,
+    INVALIDRESOURCEFIELD = 7,
+    INVALIDFALLTHROUGH = 8,
+    JOINFAILURE = 9,
+    NEGATIVESTACKSIZEWITHINBLOCK = 10,
+    UNBALANCEDSTACK = 11,
+    INVALIDMAINFUNCTIONSIGNATURE = 12,
+    DUPLICATEELEMENT = 13,
+    INVALIDMODULEHANDLE = 14,
+    UNIMPLEMENTEDHANDLE = 15,
+    INCONSISTENTFIELDS = 16,
+    UNUSEDFIELDS = 17,
+    LOOKUPFAILED = 18,
+    VISIBILITYMISMATCH = 19,
+    TYPERESOLUTIONFAILURE = 20,
+    TYPEMISMATCH = 21,
+    MISSINGDEPENDENCY = 22,
+    POPREFERENCEERROR = 23,
+    POPRESOURCEERROR = 24,
+    RELEASEREFTYPEMISMATCHERROR = 25,
+    BRTYPEMISMATCHERROR = 26,
+    ABORTTYPEMISMATCHERROR = 27,
+    STLOCTYPEMISMATCHERROR = 28,
+    STLOCUNSAFETODESTROYERROR = 29,
+    RETUNSAFETODESTROYERROR = 30,
+    RETTYPEMISMATCHERROR = 31,
+    FREEZEREFTYPEMISMATCHERROR = 32,
+    FREEZEREFEXISTSMUTABLEBORROWERROR = 33,
+    BORROWFIELDTYPEMISMATCHERROR = 34,
+    BORROWFIELDBADFIELDERROR = 35,
+    BORROWFIELDEXISTSMUTABLEBORROWERROR = 36,
+    COPYLOCUNAVAILABLEERROR = 37,
+    COPYLOCRESOURCEERROR = 38,
+    COPYLOCEXISTSBORROWERROR = 39,
+    MOVELOCUNAVAILABLEERROR = 40,
+    MOVELOCEXISTSBORROWERROR = 41,
+    BORROWLOCREFERENCEERROR = 42,
+    BORROWLOCUNAVAILABLEERROR = 43,
+    BORROWLOCEXISTSBORROWERROR = 44,
+    CALLTYPEMISMATCHERROR = 45,
+    CALLBORROWEDMUTABLEREFERENCEERROR = 46,
+    PACKTYPEMISMATCHERROR = 47,
+    UNPACKTYPEMISMATCHERROR = 48,
+    READREFTYPEMISMATCHERROR = 49,
+    READREFRESOURCEERROR = 50,
+    READREFEXISTSMUTABLEBORROWERROR = 51,
+    WRITEREFTYPEMISMATCHERROR = 52,
+    WRITEREFRESOURCEERROR = 53,
+    WRITEREFEXISTSBORROWERROR = 54,
+    WRITEREFNOMUTABLEREFERENCEERROR = 55,
+    INTEGEROPTYPEMISMATCHERROR = 56,
+    BOOLEANOPTYPEMISMATCHERROR = 57,
+    EQUALITYOPTYPEMISMATCHERROR = 58,
+    EXISTSRESOURCETYPEMISMATCHERROR = 59,
+    EXISTSNORESOURCEERROR = 60,
+    BORROWGLOBALTYPEMISMATCHERROR = 61,
+    BORROWGLOBALNORESOURCEERROR = 62,
+    MOVEFROMTYPEMISMATCHERROR = 63,
+    MOVEFROMNORESOURCEERROR = 64,
+    MOVETOSENDERTYPEMISMATCHERROR = 65,
+    MOVETOSENDERNORESOURCEERROR = 66,
+    CREATEACCOUNTTYPEMISMATCHERROR = 67,
+    GLOBALREFERENCEERROR = 68,
+    MODULEADDRESSDOESNOTMATCHSENDER = 69,
+    NOMODULEHANDLES = 70,
+    MISSINGACQUIRESRESOURCEANNOTATIONERROR = 71,
+    EXTRANEOUSACQUIRESRESOURCEANNOTATIONERROR = 72,
+    DUPLICATEACQUIRESRESOURCEANNOTATIONERROR = 73,
+    INVALIDACQUIRESRESOURCEANNOTATIONERROR = 74,
 }
 
 export enum VMInvariantViolationError {
@@ -413,6 +420,8 @@ export enum VMInvariantViolationError {
     LINKERERROR = 6,
     LOCALREFERENCEERROR = 7,
     STORAGEERROR = 8,
+    INTERNALTYPEERROR = 9,
+    EVENTKEYMISMATCH = 10,
 }
 
 export enum BinaryError {
@@ -446,4 +455,6 @@ export enum RuntimeStatus {
     VALUESERIALIZATIONERROR = 13,
     VALUEDESERIALIZATIONERROR = 14,
     DUPLICATEMODULENAME = 15,
+    EXECUTIONSTACKOVERFLOW = 16,
+    CALLSTACKOVERFLOW = 17,
 }

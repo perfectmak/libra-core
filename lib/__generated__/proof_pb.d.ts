@@ -72,6 +72,43 @@ export namespace SparseMerkleProof {
     }
 }
 
+export class AccumulatorConsistencyProof extends jspb.Message { 
+    clearFrozenSubtreeRootsList(): void;
+    getFrozenSubtreeRootsList(): Array<Uint8Array | string>;
+    getFrozenSubtreeRootsList_asU8(): Array<Uint8Array>;
+    getFrozenSubtreeRootsList_asB64(): Array<string>;
+    setFrozenSubtreeRootsList(value: Array<Uint8Array | string>): void;
+    addFrozenSubtreeRoots(value: Uint8Array | string, index?: number): Uint8Array | string;
+
+    getNumSiblings(): number;
+    setNumSiblings(value: number): void;
+
+    clearNonDefaultSiblingsList(): void;
+    getNonDefaultSiblingsList(): Array<Uint8Array | string>;
+    getNonDefaultSiblingsList_asU8(): Array<Uint8Array>;
+    getNonDefaultSiblingsList_asB64(): Array<string>;
+    setNonDefaultSiblingsList(value: Array<Uint8Array | string>): void;
+    addNonDefaultSiblings(value: Uint8Array | string, index?: number): Uint8Array | string;
+
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): AccumulatorConsistencyProof.AsObject;
+    static toObject(includeInstance: boolean, msg: AccumulatorConsistencyProof): AccumulatorConsistencyProof.AsObject;
+    static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
+    static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
+    static serializeBinaryToWriter(message: AccumulatorConsistencyProof, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): AccumulatorConsistencyProof;
+    static deserializeBinaryFromReader(message: AccumulatorConsistencyProof, reader: jspb.BinaryReader): AccumulatorConsistencyProof;
+}
+
+export namespace AccumulatorConsistencyProof {
+    export type AsObject = {
+        frozenSubtreeRootsList: Array<Uint8Array | string>,
+        numSiblings: number,
+        nonDefaultSiblingsList: Array<Uint8Array | string>,
+    }
+}
+
 export class SignedTransactionProof extends jspb.Message { 
 
     hasLedgerInfoToTransactionInfoProof(): boolean;
