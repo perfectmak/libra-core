@@ -126,7 +126,7 @@ export class AccountAddress {
   }
 
   public static default(): AccountAddress {
-    return new AccountAddress(new Uint8Array(Buffer.from(Addresses.MinterAddress, 'hex')));
+    return new AccountAddress(new Uint8Array(Buffer.from(Addresses.AssociationAddress, 'hex')));
   }
   private readonly addressBytes: Uint8Array;
 
