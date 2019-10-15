@@ -1,5 +1,7 @@
 [![Build Status](https://travis-ci.org/perfectmak/libra-core.svg?branch=master)](https://travis-ci.org/perfectmak/libra-core)
 
+> NOTE: This library is currently not being maintained. This is because of my current busy schedule and Libra not being stable and having a lot of breaking changes occurring. I'll resume maintaining and updating it when Libra becomes more stable. In the meantime, you can use some of the other libraries like [Kulap libra](https://github.com/kulapio/libra-core#readme). Thank you ❣️
+
 # Libra Core 
 
 Libra Core is a javascript library client that can be used to interact with libra nodes. It is built using typescript.
