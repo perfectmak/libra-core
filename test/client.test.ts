@@ -1,8 +1,21 @@
-import { LibraAdmissionControlStatus, LibraClient, LibraNetwork, LibraWallet } from '../lib';
+import { LibraAdmissionControlStatus, LibraClient, LibraNetwork, LibraWallet, Account } from '../lib';
 import './utils';
+import { AccountAddress } from '../lib/wallet/Accounts';
 
 describe('LibraClient', () => {
-  xit('should query account state and transfer', async () => {
+  it('should use minter address and sanity test calling getAccountTransaction()', async () => {
+    const client = new LibraClient({ network: LibraNetwork.Testnet });
+
+    const account1Address = AccountAddress.default().toHex();
+
+    // It should be safe to assume that the minter has done the 0 sequence
+    const trans = await client.getAccountTransaction(account1Address, 0);
+    expect(trans!.signedTransaction.transaction.sendersAddress.toString()).toEqual(account1Address);
+
+  }, 5000);
+
+
+  it('should query account state and transfer', async () => {
     const client = new LibraClient({ network: LibraNetwork.Testnet });
     const wallet = new LibraWallet({
       mnemonic:

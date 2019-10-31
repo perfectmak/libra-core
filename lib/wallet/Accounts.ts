@@ -3,6 +3,7 @@ import { SHA3 } from 'sha3';
 import { CursorBuffer } from '../common/CursorBuffer';
 import Addresses from '../constants/Addresses';
 import { KeyPair } from '../crypto/Eddsa';
+import { EventHandle } from './Events';
 
 export type AccountStates = AccountState[];
 
@@ -20,8 +21,8 @@ export class AccountState {
     return new AccountState(
       new Uint8Array(Buffer.from(address, 'hex')),
       new BigNumber(0),
-      new BigNumber(0),
-      new BigNumber(0),
+      EventHandle.default(),
+      EventHandle.default(),
       new BigNumber(0),
       true
     );
@@ -35,31 +36,41 @@ export class AccountState {
     const balance = cursor.read64();
     const delegatedWithdrawalCapability = cursor.readBool();
     const receivedEventsCount = cursor.read64();
+    const receivedEventsKeyLen = cursor.read32();
+    const receivedEventsKey = cursor.readXBytes(receivedEventsKeyLen);
     const sentEventsCount = cursor.read64();
+    const sentEventsKeyLen = cursor.read32();
+    const sentEventsKey = cursor.readXBytes(sentEventsKeyLen);
     const sequenceNumber = cursor.read64();
 
-    return new AccountState(authenticationKey, balance, receivedEventsCount, sentEventsCount, sequenceNumber, delegatedWithdrawalCapability);
+    return new AccountState(
+      authenticationKey,
+      balance,
+      new EventHandle(receivedEventsKey,receivedEventsCount),
+      new EventHandle(sentEventsKey,sentEventsCount),
+      sequenceNumber,
+      delegatedWithdrawalCapability);
   }
   public readonly authenticationKey: Uint8Array;
   public readonly balance: BigNumber;
-  public readonly receivedEventsCount: BigNumber;
-  public readonly sentEventsCount: BigNumber;
+  public readonly receivedEvents: EventHandle;
+  public readonly sentEvents: EventHandle;
   public readonly sequenceNumber: BigNumber;
   public readonly delegatedWithdrawalCapability: boolean;
 
   private constructor(
     authenticationKey: Uint8Array,
     balance: BigNumber,
-    receivedEventsCount: BigNumber,
-    sentEventsCount: BigNumber,
+    receivedEvents: EventHandle,
+    sentEvents: EventHandle,
     sequenceNumber: BigNumber,
     delegatedWithdrawalCapability: boolean,
   ) {
     this.balance = balance;
     this.sequenceNumber = sequenceNumber;
     this.authenticationKey = authenticationKey;
-    this.sentEventsCount = sentEventsCount;
-    this.receivedEventsCount = receivedEventsCount;
+    this.sentEvents = sentEvents;
+    this.receivedEvents = receivedEvents;
     this.delegatedWithdrawalCapability = delegatedWithdrawalCapability;
   }
 }
@@ -115,7 +126,7 @@ export class AccountAddress {
   }
 
   public static default(): AccountAddress {
-    return new AccountAddress(new Uint8Array(Buffer.from(Addresses.MinterAddress, 'hex')));
+    return new AccountAddress(new Uint8Array(Buffer.from(Addresses.AssociationAddress, 'hex')));
   }
   private readonly addressBytes: Uint8Array;
 

@@ -8,11 +8,10 @@ import * as access_path_pb from "./access_path_pb";
 import * as proof_pb from "./proof_pb";
 
 export class Event extends jspb.Message { 
-
-    hasAccessPath(): boolean;
-    clearAccessPath(): void;
-    getAccessPath(): access_path_pb.AccessPath | undefined;
-    setAccessPath(value?: access_path_pb.AccessPath): void;
+    getKey(): Uint8Array | string;
+    getKey_asU8(): Uint8Array;
+    getKey_asB64(): string;
+    setKey(value: Uint8Array | string): void;
 
     getSequenceNumber(): string;
     setSequenceNumber(value: string): void;
@@ -35,7 +34,7 @@ export class Event extends jspb.Message {
 
 export namespace Event {
     export type AsObject = {
-        accessPath?: access_path_pb.AccessPath.AsObject,
+        key: Uint8Array | string,
         sequenceNumber: string,
         eventData: Uint8Array | string,
     }

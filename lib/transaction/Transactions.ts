@@ -54,7 +54,7 @@ export class LibraTransaction {
         maxGasAmount: new BigNumber(1000000),
       },
       `${Math.floor(new Date().getTime() / 1000) + 100}`,
-      new Uint8Array(Addresses.AddressLength),
+      new Uint8Array(Buffer.from(Addresses.AssociationAddress, 'hex')),
       '-1',
     );
   }
@@ -165,13 +165,11 @@ class LibraSignedTransactionProof {}
 export class LibraTransactionEvent {
   public readonly data: Uint8Array; // eventData
   public readonly sequenceNumber: BigNumber;
-  public readonly address?: AccountAddress;
-  public readonly path?: Uint8Array;
+  public readonly eventKey?: Uint8Array;
 
-  constructor(data: Uint8Array, sequenceNumber: BigNumber | string, address?: AccountAddress, path?: Uint8Array) {
+  constructor(data: Uint8Array, sequenceNumber: BigNumber | string, eventKey?: Uint8Array) {
     this.data = data;
     this.sequenceNumber = new BigNumber(sequenceNumber);
-    this.address = address;
-    this.path = path;
+    this.eventKey = eventKey;
   }
 }
