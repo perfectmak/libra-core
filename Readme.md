@@ -88,7 +88,9 @@ import { LibraClient, LibraNetwork } from 'libra-core';
 
 async function main() {
   const client = new LibraClient({ network: LibraNetwork.Testnet });
-
+  const wallet = new LibraWallet({
+          mnemonic: 'upgrade salt toy stable drop paddle'
+        });
   const account = wallet.newAccount();
 
   // mint 2 libracoins to users accounts
